@@ -9,6 +9,7 @@ import {
     Autocomplete,
     DirectionsRenderer,
 } from "@react-google-maps/api";
+import { Router } from "next/router";
 // Import magnifying glass from heroicons
 
 export default function StartTripPage() {
@@ -27,7 +28,6 @@ export default function StartTripPage() {
         googleMapsApiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY,
         libraries: ["places"],
     });
-
     /* Calling the getCurrentUser function when the session changes. */
     useEffect(() => {
         getCurrentUser();
@@ -74,42 +74,77 @@ export default function StartTripPage() {
     }
 
     /**
-     * The function calculates the route between the current location and the destination, and then
-     * sets the directionsResponse, distance, and duration state variables
-     * @returns The distance and duration of the route.
+     * Creates a trip request by storing it in the supabase database.
+     * Uses the following state variables: destination, origin,
+     */
+    async function createTripRequest() {
+        try {
+            const user = await getCurrentUser();
+
+            const data = {
+                user_id: user.id,
+                origin_place_id:
+                    directionsResponse.geocoded_waypoints[0].place_id,
+                destination_place_id:
+                    directionsResponse.geocoded_waypoints[1].place_id,
+                awaiting: true,
+            };
+
+            console.log(data);
+
+            let { error } = await supabase.from("trip_requests").insert([data]);
+
+            if (error) {
+                throw error;
+            }
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    /**
+     * The function calculates the route between the current location and the destination.
+     * Result: changes the directionsResponse, distance, and duration state variables
      */
     function calculateRoute() {
         if (destinationsRef.current.value === "") {
             alert("Please enter a destination");
             return;
         }
-
-        const directionsService = new google.maps.DirectionsService();
-        directionsService.route(
-            {
-                origin: currentLocation,
-                destination: destinationsRef.current.value,
-                travelMode: google.maps.TravelMode.WALKING,
-            },
-            (result, status) => {
-                if (status === google.maps.DirectionsStatus.OK) {
-                    setDirectionsResponse(result);
-                    setDistance(result.routes[0].legs[0].distance.text);
-                    setDuration(result.routes[0].legs[0].duration.text);
-                    console.log("result", result);
-                    console.log(
-                        "result.routes[0].legs[0].distance.text",
-                        result.routes[0].legs[0].distance.text
-                    );
-                    console.log(
-                        "result.routes[0].legs[0].duration.text",
-                        result.routes[0].legs[0].duration.text
-                    );
-                } else {
-                    console.error(`error fetching directions ${result}`);
+        try {
+            const directionsService = new google.maps.DirectionsService();
+            directionsService.route(
+                {
+                    origin: currentLocation,
+                    destination: destinationsRef.current.value,
+                    travelMode: google.maps.TravelMode.WALKING,
+                },
+                (result, status) => {
+                    if (status === google.maps.DirectionsStatus.OK) {
+                        setDirectionsResponse(result);
+                        setDistance(result.routes[0].legs[0].distance.text);
+                        setDuration(result.routes[0].legs[0].duration.text);
+                        console.log("result", result);
+                        console.log(
+                            "result.routes[0].legs[0].distance.text",
+                            result.routes[0].legs[0].distance.text
+                        );
+                        console.log(
+                            "result.routes[0].legs[0].duration.text",
+                            result.routes[0].legs[0].duration.text
+                        );
+                    } else {
+                        console.error(`error fetching directions ${result}`);
+                    }
                 }
-            }
-        );
+            );
+        } catch (error) {
+            alert(error.message);
+        }
+
+        // Consider
     }
 
     // async function getProfile() {
@@ -162,16 +197,17 @@ export default function StartTripPage() {
                 >
                     {currentLocation && <Marker position={currentLocation} />}
                     {directionsResponse && (
-                        <DirectionsRenderer
-                            directions={directionsResponse}
-                        />
+                        <DirectionsRenderer directions={directionsResponse} />
                     )}
                 </GoogleMap>
             </div>
             <div className="flex justify-start items-center absolute left-0 right-0 m-auto top-14 z-10 w-[95vw] h-14 bg-white shadow-lg rounded-full">
-                <button onClick={() => {
-                    calculateRoute();
-                }}>
+                <button
+                    onClick={() => {
+                        // Calculate the route and add new component to confirm trip
+                        calculateRoute();
+                    }}
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -194,9 +230,26 @@ export default function StartTripPage() {
                         className="w-[85vw] h-full bg-transparent outline-none text-lg font-medium border-none focus:border-none focus:ring-0"
                         ref={destinationsRef}
                         autoComplete={"off"}
+                        min={10}
                     />
                 </Autocomplete>
             </div>
+            {
+                // If the user has entered a destination, show the trip confirmation component
+                directionsResponse && (
+                    <button
+                        disabled={
+                            destinationsRef.current.value < 10 ? true : false
+                        }
+                        onClick={() => {
+                            createTripRequest();
+                        }}
+                        className="absolute bottom-32 w-[95vw] m-auto left-0 right-0 bg-black text-white text-2xl font-medium px-10 py-4"
+                    >
+                        Start Trip Matching
+                    </button>
+                )
+            }
             <div>
                 <button
                     className="inline-flex absolute bottom-10 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"

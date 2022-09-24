@@ -39,13 +39,14 @@ export default function Auth() {
                         handleLogin(email);
                     }}
                     className=""
-                    disabled={loading}
+                    disabled={false}
                 >
-                    <span className="">
-                        {loading ? "Loading" : "Send magic link"}
-                    </span>
+                    {loading ? "Loading..." : "Send magic link"}
                 </button>
             </div>
         </div>
+
+
+        
     );
 }
