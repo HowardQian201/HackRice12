@@ -19,7 +19,7 @@ class MyDocument extends Document {
             <Html>
                 <Head>
                     <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
-                    <script async defer src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_MAPS_API_KEY}&callback=initMap`}></script>
+                    {/* <script async defer src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_MAPS_API_KEY}&callback=initMap`}></script> */}
                 </Head>
                 <body>
                     <Main />

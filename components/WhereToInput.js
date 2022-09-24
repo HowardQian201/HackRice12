@@ -10,6 +10,7 @@ export default function WhereToInput({ session }) {
     const [picture, setPicture] = useState(null);
     const [matched, setMatched] = useState(null);
 
+    // create a ref to the div 
    /**
     * > Get the current user from the session
     * @returns The current user's information.
@@ -68,7 +69,8 @@ export default function WhereToInput({ session }) {
             fields: ["name", "geometry"],
           };
           console.log("google", google);
-          return
+          console.log("google.maps", google.maps);
+          console.log("google.maps.places", google.maps.places);
           service = new google.maps.places.PlacesService(map);
           service.findPlaceFromQuery(request, (results, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK && results) {
@@ -179,7 +181,11 @@ export default function WhereToInput({ session }) {
             //         dist2 <= 0.5
             //     ) {
             //         //match two users
+            //         console.log('matched');
+            //         console.log(user.id);
+            //         console.log(rowItems[2]);
             //         match_with_user(user.id, rowItems[2]);
+            //         return rowItems[2]; 
             //     }
             // }
         }
