@@ -11,9 +11,9 @@ function MyApp({ Component, pageProps }) {
 
   return (
     
-    <Wrapper apiKey={process.env.NEXT_PUBLIC_MAPS_API_KEY} render={render} libraries={["places"]}>
+    // <Wrapper apiKey={process.env.NEXT_PUBLIC_MAPS_API_KEY} render={render} libraries={["places"]}>
       <Component {...pageProps} />
-    </Wrapper>
+    // </Wrapper>
   )
 }
 

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
+import getCurrentUser from "../utils/getCurrentUser";
+
 // Import Date
 export default function WhereToInput({ session }) {
     const [loading, setLoading] = useState(true);
@@ -10,27 +12,9 @@ export default function WhereToInput({ session }) {
     const [picture, setPicture] = useState(null);
     const [matched, setMatched] = useState(null);
 
-    // create a ref to the div 
-   /**
-    * > Get the current user from the session
-    * @returns The current user's information.
-    */
-    async function getCurrentUser() {
-        const {
-            data: { session },
-            error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-            throw error;
-        }
-
-        if (!session?.user) {
-            throw new Error("User not logged in");
-        }
-
-        return session.user;
-    }
+    useEffect(() => {
+        getCurrentUser();
+    }, [session]);
 
     /* It's a React hook that runs the function `getLocation()` when the component is mounted. */
     useEffect(() => {

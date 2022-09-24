@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import Auth from "../components/Auth";
-import StartRidePage from "../components/StartRidePage";
+import Profile from "../components/ProfilePage";
 
 export default function Home() {
     const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +49,8 @@ export default function Home() {
             {!session ? (
                 <Auth />
             ) : (
-                <StartRidePage key={session.user.id} session={session} />
+                // <StartRidePage key={session.user.id} session={session} />
+                <Profile key={session.user.id} session={session} />
             )}
         </div>
     );

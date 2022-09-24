@@ -5,3 +5,15 @@
 .b {
   background-color: 2px solid red;
 }
+
+.interHeader {
+  @apply text-4xl font-semibold tracking-tight;
+}
+
+.interSubheader {
+  @apply text-2xl font-semibold tracking-tight;
+}
+
+.interBody {
+  @apply text-lg font-semibold;
+}
