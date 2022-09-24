@@ -1,4 +1,4 @@
-import { React, useState, useRouter, useEffect } from "react";
+import { React, useState, useRouter, useEffect, useRef } from "react";
 import getCurrentUser from "../utils/getCurrentUser";
 import { supabase } from "../utils/supabaseClient";
 import {
@@ -11,10 +11,27 @@ import {
 
 export default function TripMatchingPage() {
     const [loading, setLoading] = useState(true);
+    const [map, setMap] = useState(/** google.maps.Map */ null);
     const [originDistLoading, setOriginDistLoading] = useState(true);
     const [destDistLoading, setDestDistLoading] = useState(true);
     const [originPlaceId, setOriginPlaceId] = useState(null);
     const [destinationPlaceId, setDestinationPlaceId] = useState(null);
+
+    const [userTripRequestID, setUserTripRequestID] = useState(null);
+
+    
+
+    // const [userOriginResult, setUserOriginResult] = useState(null);
+    // const [userDestinationResult, setUserDestinationResult] = useState(null);
+    // const [otherOriginResult, setOtherOriginResult] = useState(null);
+    // const [otherDestinationResult, setOtherDestinationResult] = useState(null);
+
+    const userOriginResult = useRef();
+    const userDestinationResult = useRef();
+    const otherOriginResult = useRef();
+    const otherDestinationResult = useRef();
+    
+
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY,
         libraries: ["places"],
@@ -22,7 +39,7 @@ export default function TripMatchingPage() {
 
     useEffect(() => {
         getUsersRecentTripRequest();
-    }, []);
+    }, [map]);
 
     // get the user's most recent trip request that is the current
     async function getUsersRecentTripRequest() {
@@ -38,15 +55,17 @@ export default function TripMatchingPage() {
                 .eq("awaiting", true)
                 .order("created_at", { ascending: false })
                 .limit(1); // limiting only 1 trip request per person
-
+            
             if (error && status !== 406) {
                 throw error;
             }
 
-            if (data) {
+            if (data && map) {
+                console.log("map", map);
                 console.log("data", data);
-                setOriginPlaceId(data.origin_place_id);
-                setDestinationPlaceId(data.destination_place_id);
+                setUserTripRequestID(data[0].id);
+                setOriginPlaceId(data[0].origin_place_id);
+                setDestinationPlaceId(data[0].destination_place_id);
             }
         } catch (error) {
             alert(error.message);
@@ -77,28 +96,131 @@ export default function TripMatchingPage() {
                 console.log("no data");
                 return;
             }
-            
+
             const directionsService = new google.maps.DirectionsService();
+            // Create PlacesServices object
+            let placesService = new google.maps.places.PlacesService(map);
+
+            // Create PlacesDetailsRequest object
+            var userOriginRequest = {
+                placeId: data[0].origin_place_id,
+            };
+
+            // Create PlacesDetailsRequest object
+            var userDestinationRequest = {
+                placeId: data[0].destination_place_id,
+            };
+
+            // Send request to PlacesService to get place details via placeID
+            placesService.getDetails(
+                userOriginRequest,
+                function (_userOriginResult, userOriginStatus) {
+                    if (
+                        userOriginStatus ==
+                        google.maps.places.PlacesServiceStatus.OK
+                    ) {
+                        // Set variable
+                        // setUserOriginResult(_userOriginResult);
+                        userOriginResult.current = _userOriginResult;
+                    }
+                }
+            );
+
+            // Send request to PlacesService to get place details via placeID
+            placesService.getDetails(
+                userDestinationRequest,
+                function (_userDestinationResult, userDestinationStatus) {
+                    if (
+                        userDestinationStatus ==
+                        google.maps.places.PlacesServiceStatus.OK
+                    ) {
+                        // Set variable
+                        // setUserDestinationResult(_userDestinationResult);
+                        userDestinationResult.current = _userDestinationResult;
+                    }
+                }
+            );
 
             // loop through all the trip requests
-            for (let other_request in data) {
+            data.forEach(async (other_request) => {
                 let originMatch = false;
                 let destinationMatch = false;
+                console.log("data", data);
+                console.log("other_request", other_request);
+                // Create PlacesDetailsRequest object
+                var otherOriginRequest = {
+                    placeId: other_request.origin_place_id,
+                };
+
+                // Create PlacesDetailsRequest object
+                var otherDestinationRequest = {
+                    placeId: other_request.destination_place_id,
+                };
+
+                // Send request to PlacesService to get place details via placeID
+                placesService.getDetails(
+                    otherOriginRequest,
+                    function (_otherOriginResult, otherOriginStatus) {
+                        if (
+                            otherOriginStatus ==
+                            google.maps.places.PlacesServiceStatus.OK
+                        ) {
+                            // Set variable
+                            // setOtherOriginResult(_otherOriginResult);
+                            otherOriginResult.current = _otherOriginResult;
+                        }
+                    }
+                );
+
+                // Send request to PlacesService to get place details via placeID
+                placesService.getDetails(
+                    otherDestinationRequest,
+                    function (_otherDestinationResult, otherDestinationStatus) {
+                        if (
+                            otherDestinationStatus ==
+                            google.maps.places.PlacesServiceStatus.OK
+                        ) {
+                            console.log(
+                                "_otherDestinationResult",
+                                _otherDestinationResult
+                            );
+                            // Set variable
+                            // setOtherDestinationResult(_otherDestinationResult);
+                            otherDestinationResult.current = _otherDestinationResult;
+                        }
+                    }
+                );
+                    
+                console.log("otherOriginResult.current.value", otherOriginResult.current.value);
+                console.log("otherDestinationResult.current.value", otherDestinationResult.current.value);
+                console.log("userOriginResult.current.value", userOriginResult.current.value);
+                console.log("userDestinationResult.current.value", userDestinationResult.current.value);
+                return;
+                /**
+                 * const geocode = new google.maps.Geocoder();
+                 * geocoder
+                 *  .geocode(userOriginRequest)
+                 * .then(({results}) => {setUserOriginResult(results[0].geometry.location)});
+                 * .catch((e) => alert("Geocoder failed " + e));
+                 */
                 directionsService.route(
                     {
-                        origin: originPlaceId,
-                        destination: other_request.origin_place_id,
+                        origin: userOriginResult.formatted_address,
+                        destination: otherOriginResult.formatted_address,
                         travelMode: google.maps.TravelMode.WALKING,
                     },
                     (result, status) => {
                         if (status === google.maps.DirectionsStatus.OK) {
                             // If the distance between the two are less than half a mile, then this is a match
-                            console.log("result.routes[0].legs[0].distance.value", result.routes[0].legs[0].distance.value);
+                            console.log(
+                                "result.routes[0].legs[0].distance.value",
+                                result.routes[0].legs[0].distance.value
+                            );
                             if (
                                 result.routes[0].legs[0].distance.value <
                                 804.672
                             ) {
-                              console.log("origin match");
+                                console.log("origin match");
                                 originMatch = true;
                             }
                         } else {
@@ -111,20 +233,23 @@ export default function TripMatchingPage() {
 
                 directionsService.route(
                     {
-                        origin: destinationPlaceId,
-                        destination: other_request.destination_place_id,
+                        origin: userDestinationResult.formatted_address,
+                        destination: otherDestinationResult.formatted_address,
                         travelMode: google.maps.TravelMode.WALKING,
                     },
                     (result, status) => {
-                      console.log("result", result);
+                        console.log("result", result);
                         if (status === google.maps.DirectionsStatus.OK) {
                             // If the distance between the two are less than half a mile, then this is a match
-                            console.log("result.routes[0].legs[0].distance.value", result.routes[0].legs[0].distance.value);
+                            console.log(
+                                "result.routes[0].legs[0].distance.value",
+                                result.routes[0].legs[0].distance.value
+                            );
                             if (
                                 result.routes[0].legs[0].distance.value <
                                 804.672
                             ) {
-                              console.log("destination match");
+                                console.log("destination match");
                                 destinationMatch = true;
                             }
                         } else {
@@ -138,17 +263,58 @@ export default function TripMatchingPage() {
                 // If both origin and destination match, then this is a match
                 if (originMatch && destinationMatch) {
                     console.log("match found:", other_request);
+                    // create trip object
+                    const data = {
+                        trip_request_1_id: userTripRequestID,
+                        trip_request_2_id: other_request.id,
+                    };
+        
+                    console.log(data);
+        
+                    let { error } = await supabase.from("trips").insert([data]);
+
+
+
                 } else {
                     console.log("no match found");
-                    
+                    // noMatchFound();
                 }
-            }
+            });
         } catch (error) {
             console.log(error.message);
         } finally {
             setLoading(false);
-            if (user) {
-               findMatch2(user);
+        }
+    }
+
+    async function noMatchFound() {
+        let user = await getCurrentUser();
+
+        while (true) {
+            setTimeout(() => console.log("Waiting for 5 seconds"), 5000);
+
+            let { data, error, status } = await supabase
+                .from("trip_requests")
+                .select(`*`)
+                .eq("user_id", user.id)
+                .eq("awaiting", false)
+                .order("created_at", { ascending: false })
+                .limit(1); // limiting only 1 trip request per person
+
+            if (data) {
+                // found match
+                let {
+                    data: trip,
+                    error,
+                    status,
+                } = await supabase
+                    .from("trips")
+                    .select("*")
+                    .eq("trip_request_2_id", data[0].id)
+                    .order("created_at", { ascending: false })
+                    .limit(1); // limiting only 1 match
+
+                return trip.id;
             }
         }
     }
@@ -287,5 +453,34 @@ export default function TripMatchingPage() {
     if (!isLoaded) {
         return <div>Loading...</div>;
     }
-    return <div>TripMatchingPage</div>;
+    return (
+        <>
+            <div className="absolute w-screen h-screen">
+                <GoogleMap
+                    mapContainerStyle={{
+                        width: "100%",
+                        height: "100%",
+                    }}
+                    zoom={16}
+                    // 29.717154, -95.404182 is rice university
+                    center={{ lat: 29.717, lng: -95.404 }}
+                    options={{
+                        streetViewControl: false,
+                        fullscreenControl: false,
+                        mapTypeControl: false,
+                    }}
+                    onLoad={(map) => {
+                        setMap(map);
+                    }}
+                >
+                    {/* {currentLocation && <Marker position={currentLocation} />}
+                    {directionsResponse && (
+                        <DirectionsRenderer directions={directionsResponse} />
+                    )} */}
+                </GoogleMap>
+                TripMatchingPage
+            </div>
+            ;
+        </>
+    );
 }
