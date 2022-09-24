@@ -9,7 +9,7 @@ import {
     Autocomplete,
     DirectionsRenderer,
 } from "@react-google-maps/api";
-import { Router } from "next/router";
+import { useRouter } from "next/router";
 // Import magnifying glass from heroicons
 
 export default function StartTripPage() {
@@ -21,6 +21,7 @@ export default function StartTripPage() {
     const [directionsResponse, setDirectionsResponse] = useState(null);
     const [distance, setDistance] = useState(null);
     const [duration, setDuration] = useState(null);
+    const router = useRouter();
 
     const destinationsRef = useRef();
 
@@ -69,9 +70,6 @@ export default function StartTripPage() {
         });
     }
 
-    if (!isLoaded) {
-        return <div>Loading...</div>;
-    }
 
     /**
      * Creates a trip request by storing it in the supabase database.
@@ -101,6 +99,7 @@ export default function StartTripPage() {
             alert(error.message);
         } finally {
             setLoading(false);
+            router.push("/tripMatchingPage");
         }
     }
 
@@ -173,6 +172,12 @@ export default function StartTripPage() {
     //         setLoading(false);
     //     }
     // }
+
+    if (!isLoaded) {
+        return <div>Loading...</div>;
+    }
+
+    
     return (
         <>
             {/* <WhereToInput /> */}
