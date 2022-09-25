@@ -63,8 +63,6 @@ export default function StartTripPage() {
      * @param position - An object that contains the following properties:
      */
     async function showPosition(position) {
-        console.log(position.coords.latitude);
-        console.log(position.coords.longitude);
         setCurrentLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
@@ -86,18 +84,11 @@ export default function StartTripPage() {
             geocoder
                 .geocode({ placeId: directionsResponse.geocoded_waypoints[1].place_id })
                 .then(async ({ results }) => {
-                    console.log("in here")
-                    console.log(results[0].geometry.location.lat());
-                    console.log(results[0].geometry.location.lng());
 
                     // setDestLocation({
                     //     lat: results[0].geometry.location.lat(),
                     //     lng: results[0].geometry.location.lng(),
                     // });
-                    
-                    //setTimeout(() => console.log("Waiting for 5 seconds"), 5000);
-
-                    console.log('here1');
                     const data = {
                         user_id: user.id,
                         origin_lon: currentLocation.lng,
@@ -106,14 +97,7 @@ export default function StartTripPage() {
                         dest_lat: results[0].geometry.location.lat(),
                         awaiting: true,
                     };
-
-                    console.log('here2');
-                    
-                    console.log(data);
-
                     let { error } = await supabase.from("trip_requests").insert(data);
-                    console.log('here3');
-
                     if (error) {
                         throw error;
                     }
@@ -147,19 +131,9 @@ export default function StartTripPage() {
                 },
                 (result, status) => {
                     if (status === google.maps.DirectionsStatus.OK) {
-                        console.log(result);
                         setDirectionsResponse(result);
                         setDistance(result.routes[0].legs[0].distance.text);
                         setDuration(result.routes[0].legs[0].duration.text);
-                        console.log("result", result);
-                        console.log(
-                            "result.routes[0].legs[0].distance.text",
-                            result.routes[0].legs[0].distance.text
-                        );
-                        console.log(
-                            "result.routes[0].legs[0].duration.text",
-                            result.routes[0].legs[0].duration.text
-                        );
                     } else {
                         console.error(`error fetching directions ${result}`);
                     }
