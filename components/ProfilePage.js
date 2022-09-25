@@ -15,14 +15,18 @@ export default function Account({ session }) {
     const router = useRouter();
     useEffect(() => {
         getProfile();
-        
     }, [session]);
 
     useEffect(() => {
-        if (username && firstName && lastName && university && avatar_url) {
-            setFilledInfo(true);
+        if (filledInfo === true) {
+            // Scroll to top using window.scroll()
+            window.scroll({
+                top: 0,
+                left: 0,
+                behavior: "smooth",
+            });
         }
-    }, [username, firstName, lastName, university, avatar_url]);
+    }, [filledInfo]);
 
     async function getCurrentUser() {
         const {
@@ -64,13 +68,19 @@ export default function Account({ session }) {
                 setAvatarUrl(data.avatar_url);
             }
         } catch (error) {
-            alert(error.message);
+            toast(error.message);
         } finally {
             setLoading(false);
         }
     }
 
-    async function updateProfile({ username, firstName, lastName, university, avatar_url }) {
+    async function updateProfile({
+        username,
+        firstName,
+        lastName,
+        university,
+        avatar_url,
+    }) {
         try {
             setLoading(true);
             const user = await getCurrentUser();
@@ -97,26 +107,84 @@ export default function Account({ session }) {
             toast(error.message);
         } finally {
             setLoading(false);
+            let userFilledInfoDatabase = await checkIfUserFilledInfo();
+            setFilledInfo(userFilledInfoDatabase);
         }
     }
 
+    let handleGetStartedClick = async () => {
+        if (checkIfUserFilledInfo()) {
+            router.push("/startTripPage");
+        } else {
+            toast.error("Please fill in all the information!");
+        }
+    };
+
+    let checkIfUserFilledInfo = async () => {
+        try {
+            setLoading(true);
+            const user = await getCurrentUser();
+
+            let { data, error, status } = await supabase
+                .from("profiles")
+                .select(`username, firstName, lastName, university, avatar_url`)
+                .eq("id", user.id)
+                .single();
+
+            if (error && status !== 406) {
+                throw error;
+            }
+
+            if (data) {
+                // If username, firstname, lastname, university, and avatar_url
+                // filled out, then push to dashboard
+                if (
+                    data.username &&
+                    data.firstName &&
+                    data.lastName &&
+                    data.university &&
+                    data.avatar_url
+                ) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } catch (error) {
+            toast(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
-        <div className="min-h-[100vh] flex flex-col gap-20 md:flex-row justify-center items-center p-10 lg:p-20">
+        <div className="flex flex-col gap-20 md:flex-row justify-center items-center p-10 lg:p-20">
             <section className="flex flex-col justify-center items-center lg:w-1/2">
                 <h1 className="interHeader text-center">
-                    {!filledInfo && "Welcome. Fill out all info to get started!"}
-                    {filledInfo && "Great job! Click the button below to start your trip."}
+                    {!filledInfo &&
+                        "Welcome. Fill out all info to get started!"}
+                    {filledInfo &&
+                        "You're good to go! Click the button below to get started."}
                 </h1>
-                {
-                    filledInfo && 
-                        <button
-                            className="bg-blue-600  text-white rounded-md px-4 py-2 mt-4"
-                            onClick={() => router.push("/startTripPage")}    
+                {filledInfo && (
+                    <button
+                        className="fixed flex justify-center items-center gap-4 bottom-10 left-0 right-0 w-[95vw] m-auto bg-black text-white text-2xl font-medium px-10 py-4"
+                        onClick={() => handleGetStartedClick()}
+                    >
+                        Get Started
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-6 h-6"
                         >
-                            Start a trip
-                        </button>
-                    
-                }
+                            <path
+                                fillRule="evenodd"
+                                d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                    </button>
+                )}
             </section>
             <section className="flex flex-col w-full lg:flex-row gap-10 justify-center items-center md:w-1/2">
                 <Avatar
@@ -124,10 +192,19 @@ export default function Account({ session }) {
                     size={150}
                     onUpload={(url) => {
                         setAvatarUrl(url);
-                        updateProfile({ username, firstName, lastName, university, avatar_url: url });
+                        updateProfile({
+                            username,
+                            firstName,
+                            lastName,
+                            university,
+                            avatar_url: url,
+                        });
                     }}
                 />
-                <div className="flex flex-col gap-4 w-full sm:w-60">
+                <form
+                    className="flex flex-col gap-4 w-full sm:w-60"
+                    
+                >
                     <div>
                         <label
                             htmlFor="email"
@@ -157,6 +234,7 @@ export default function Account({ session }) {
                             <input
                                 id="username"
                                 type="text"
+                                required={true}
                                 className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
                                 value={username || ""}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -173,7 +251,8 @@ export default function Account({ session }) {
                         <div className="mt-1">
                             <input
                                 id="firstName"
-                                type="url"
+                                type="text"
+                                required={true}
                                 className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
                                 value={firstName || ""}
                                 onChange={(e) => setFirstName(e.target.value)}
@@ -190,7 +269,8 @@ export default function Account({ session }) {
                         <div className="mt-1">
                             <input
                                 id="lastName"
-                                type="url"
+                                type="text"
+                                required={true}
                                 className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
                                 value={lastName || ""}
                                 onChange={(e) => setLastName(e.target.value)}
@@ -207,7 +287,8 @@ export default function Account({ session }) {
                         <div className="mt-1">
                             <input
                                 id="university"
-                                type="url"
+                                type="text"
+                                required={true}
                                 className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
                                 value={university || ""}
                                 onChange={(e) => setUniversity(e.target.value)}
@@ -217,17 +298,22 @@ export default function Account({ session }) {
 
                     <div>
                         <button
+                            type="submit"
                             className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            onClick={() =>
-                                updateProfile({ username, firstName, lastName, university, avatar_url })
-                            }
                             disabled={loading}
+                            onClick={() => updateProfile({
+                                username,
+                                firstName,
+                                lastName,
+                                university,
+                                avatar_url,
+                            })}
                         >
                             {loading ? "Loading ..." : "Update"}
                         </button>
                     </div>
 
-                    <div>
+                    <div className="mb-14">
                         <button
                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                             onClick={() => supabase.auth.signOut()}
@@ -235,7 +321,7 @@ export default function Account({ session }) {
                             Sign Out
                         </button>
                     </div>
-                </div>
+                </form>
             </section>
         </div>
     );
