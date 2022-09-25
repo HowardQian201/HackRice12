@@ -205,7 +205,7 @@ export default function TripMatchingPage() {
                             .update({ awaiting: false })
                             .eq("id", other_request.id); // setting the other person's awaiting state to false
                         console.log("error3" + error3);
-                        
+
                         // let { data: data4, error4 } = await supabase
                         //     .from("trips")
                         //     .select("*")
@@ -307,6 +307,11 @@ export default function TripMatchingPage() {
                     )} */}
                 </GoogleMap>
                 TripMatchingPage
+                <div className="flex justify-center items-center absolute inset-0 bg-white w-[80vw] shadow-xl h-[80vh] m-auto rounded-2xl">
+                    <h1 className="interHeader animate-bounce">
+                        Creating match...
+                    </h1>
+                </div>
             </div>
             ;
         </>
