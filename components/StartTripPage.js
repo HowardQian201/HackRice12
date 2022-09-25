@@ -247,7 +247,7 @@ export default function StartTripPage() {
             {
                 // If the user has entered a destination, show the trip confirmation component
                 directionsResponse && (
-                    <div className="absolute flex flex-col p-4 bottom-0 bg-white h-[40vh] w-screen rounded-xl">
+                    <div className="absolute flex flex-col justify-between p-4 bottom-0 bg-white h-[40vh] w-screen rounded-xl">
                         <button
                             disabled={
                                 destinationsRef.current.value < 10
@@ -261,29 +261,32 @@ export default function StartTripPage() {
                         >
                             Start Trip Matching
                         </button>
-                        <button
-                            className="inline-flex absolute bottom-10 left-0 p-4 items-center rounded-full bg-gray-200 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            onClick={() => router.push("/profilePage")}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                className="w-6 h-6"
+
+                        <div className="flex gap-2 items-center justify-end mb-4">
+                            <button
+                                className="inline-flex p-4 items-center rounded-full bg-gray-200 text-sm font-medium text-gray-700 shadow-sm hover:opacity-90 focus:outline-none"
+                                onClick={() => router.push("/profilePage")}
                             >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                        </button>
-                        <button
-                            className="inline-flex absolute bottom-10 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            onClick={() => supabase.auth.signOut()}
-                        >
-                            Sign Out
-                        </button>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    className="w-6 h-6"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                            </button>
+                            <button
+                                className="interBody px-4 py-2 inline-flex items-center rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                onClick={() => supabase.auth.signOut()}
+                            >
+                                Sign Out
+                            </button>
+                        </div>
                     </div>
                 )
             }
