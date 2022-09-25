@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../utils/supabaseClient";
-import WhereToInput from "./whereToInput";
 import getCurrentUser from "../utils/getCurrentUser";
 import UniversalFadeAnimation from "./UniversalFadeComponent";
 import {
@@ -38,7 +37,7 @@ export default function StartTripPage() {
 
     useEffect(() => {
         getLocation();
-    }, []);
+    }, [getLocation]);
 
     /* Setting the current location of the user. */
     useEffect(() => {
@@ -47,7 +46,7 @@ export default function StartTripPage() {
         } else {
             getLocation();
         }
-    }, [currentLocation, map]);
+    }, [currentLocation, map, getLocation]);
 
     /**
      * If the browser supports geolocation, get the current position and pass it to the showPosition

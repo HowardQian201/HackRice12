@@ -18,7 +18,7 @@ export default function Account({ session }) {
 
     useEffect(() => {
         getProfile();
-    }, [session]);
+    }, [session, getProfile]);
 
     useEffect(() => {
         if (filledInfo === true) {
@@ -331,7 +331,7 @@ export default function Account({ session }) {
             </UniversalFadeAnimation>
             {filledInfo && (
                 <button
-                    className="fixed flex justify-center items-center gap-4 bottom-10 left-0 right-0 w-[95vw] m-auto bg-black text-white text-2xl font-medium px-10 py-4"
+                    className="fixed flex rounded-full justify-center items-center gap-4 bottom-10 left-0 right-0 w-[95vw] m-auto bg-black text-white text-2xl font-medium px-10 py-4"
                     onClick={() => handleGetStartedClick()}
                 >
                     Get Started

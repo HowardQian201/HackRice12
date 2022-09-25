@@ -7,6 +7,8 @@ export default function Auth() {
     const [isLoading, setIsLoading] = useState(true);
     const [session, setSession] = useState(null);
 
+    const router = useRouter();
+
     // On mount, check to see if the user has an active session
     // If they do, set the session object in state
     // If they don't, send them to the Auth component
@@ -43,12 +45,11 @@ export default function Auth() {
 
             subscription?.unsubscribe();
         };
-    }, []);
+    }, [router]);
     
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [showInput, setShowInput] = useState(false);
-    const router = useRouter();
     const handleLogin = async (email) => {
         try {
             setLoading(true);
@@ -74,7 +75,7 @@ export default function Auth() {
                         Walkify
                     </h1>
                 </UniversalFadeAnimation>
-                <img src="/images/authCityWomen.png" className="w-[80vw]" />
+                <img src="/images/authCityWomen.png" className="w-[80vw]" alt="woman in the city"/>
 
                 <h1 className="interSubheader">Safely walk home together.</h1>
                 <div className="mt-10 flex flex-col justify-center items-center gap-4">

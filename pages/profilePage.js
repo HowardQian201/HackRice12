@@ -47,7 +47,7 @@ export default function ProfilePage() {
 
             subscription?.unsubscribe();
         };
-    }, []);
+    }, [router]);
     
     return (
         <div className="">

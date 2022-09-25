@@ -10,7 +10,7 @@ export default function SplashScreen() {
         setTimeout(() => {
             router.push("/auth");
         }, 1200);
-    }, []);
+    }, [router]);
 
     return (
         <div className="flex flex-col gap-10 mb-10 justify-center items-center bg-black h-screen w-screen b">

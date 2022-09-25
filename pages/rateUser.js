@@ -1,7 +1,7 @@
 import React from 'react'
-import Rating from '../components/Rating'
+import RatingComponent from '../components/RatingComponent.js'
 export default function rateUser() {
   return (
-    <div><Rating /></div>
+    <div><RatingComponent /></div>
   )
 }

@@ -17,7 +17,7 @@ export default function TripMatchingPage() {
     const [destDistLoading, setDestDistLoading] = useState(true);
     //const [tripRequest, setTripRequest] = useState(null);
     const router = useRouter();
-    
+
     const [originCoords, setOriginCoords] = useState(true);
     const [destCoords, setDestCoords] = useState(true);
 
@@ -33,7 +33,7 @@ export default function TripMatchingPage() {
             // getUsersRecentTripRequest();
             findMatch();
         }
-    }, [map]);
+    }, [map, findMatch]);
 
     // // get the user's most recent trip request that is the current
     // async function getUsersRecentTripRequest() {
@@ -79,21 +79,23 @@ export default function TripMatchingPage() {
         try {
             setLoading(true);
 
-            let { data: tripRequest, error: tripRequestError, status } = await supabase
-            .from("trip_requests")
-            .select('*')
-            .eq("user_id", user.id)
-            .eq("awaiting", true)
-            .order("created_at", { ascending: false })
-            .limit(1); // limiting only 1 trip request per person
+            let {
+                data: tripRequest,
+                error: tripRequestError,
+                status,
+            } = await supabase
+                .from("trip_requests")
+                .select("*")
+                .eq("user_id", user.id)
+                .eq("awaiting", true)
+                .order("created_at", { ascending: false })
+                .limit(1); // limiting only 1 trip request per person
 
             console.log("TRIPREQUEST", tripRequest);
 
             if (tripRequestError && status !== 406) {
                 throw error;
             }
-
-
 
             // get all trip requests that are awaiting and not the current user's
             let { data, error } = await supabase
@@ -114,31 +116,32 @@ export default function TripMatchingPage() {
                 let user_dest_lat = tripRequest[0].dest_lat;
                 let user_dest_lon = tripRequest[0].dest_lon;
                 let matched_user_index = -1;
-                
+
                 // result origin lat/lon, dest lat/lon
-                function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+                function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
                     var R = 6371; // Radius of the earth in km
-                    var dLat = deg2rad(lat2-lat1);  // deg2rad below
-                    var dLon = deg2rad(lon2-lon1); 
-                    var a = 
-                      Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-                      Math.sin(dLon/2) * Math.sin(dLon/2)
-                      ; 
-                    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+                    var dLat = deg2rad(lat2 - lat1); // deg2rad below
+                    var dLon = deg2rad(lon2 - lon1);
+                    var a =
+                        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(deg2rad(lat1)) *
+                            Math.cos(deg2rad(lat2)) *
+                            Math.sin(dLon / 2) *
+                            Math.sin(dLon / 2);
+                    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                     var d = R * c; // Distance in km
                     return d;
                 }
-                  
+
                 function deg2rad(deg) {
-                    return deg * (Math.PI/180)
+                    return deg * (Math.PI / 180);
                 }
 
                 for (let i = 0; i < data.length; i++) {
                     let other_origin_lat = data[i].origin_lat;
                     let other_origin_lon = data[i].origin_lon;
-                    console.log('OTHER:' + other_origin_lat + other_origin_lon);
-                    console.log('USER:' + user_origin_lat + user_origin_lon);
+                    console.log("OTHER:" + other_origin_lat + other_origin_lon);
+                    console.log("USER:" + user_origin_lat + user_origin_lon);
                     let other_dest_lat = data[i].dest_lat;
                     let other_dest_lon = data[i].dest_lon;
                     // let distance_origin = google.maps.geometry.spherical.computeDistanceBetween(
@@ -147,9 +150,19 @@ export default function TripMatchingPage() {
                     // let distance_dest = google.maps.geometry.spherical.computeDistanceBetween(
                     //     new google.maps.LatLng(other_dest_lat, other_dest_lon),
                     //     new google.maps.LatLng(user_dest_lat, user_dest_lon));
-                    let distance_origin = getDistanceFromLatLonInKm(other_origin_lat, other_origin_lon, user_origin_lat, user_origin_lon);
-                    let distance_dest = getDistanceFromLatLonInKm(other_dest_lat, other_dest_lon, user_dest_lat, user_dest_lon);
-                    
+                    let distance_origin = getDistanceFromLatLonInKm(
+                        other_origin_lat,
+                        other_origin_lon,
+                        user_origin_lat,
+                        user_origin_lon
+                    );
+                    let distance_dest = getDistanceFromLatLonInKm(
+                        other_dest_lat,
+                        other_dest_lon,
+                        user_dest_lat,
+                        user_dest_lon
+                    );
+
                     console.log("d_o" + distance_origin);
                     console.log("d_d" + distance_dest);
                     if (distance_origin < 1 && distance_dest < 1) {
@@ -157,14 +170,16 @@ export default function TripMatchingPage() {
                         break;
                     }
                 }
-                
+
                 // If both origin and destination match, then this is a match
                 if (matched_user_index != -1) {
                     let other_request = data[matched_user_index];
                     console.log("match found:", other_request);
                     ///////////////////////////////////////////// create trip object
+                    console.log("tripRequest[0].id", tripRequest[0].id);
+                    console.log("other_request.id", other_request.id);
                     const new_data = {
-                        trip_request_1_id: tripRequest.id, // your trip request id
+                        trip_request_1_id: tripRequest[0].id, // your trip request id
                         trip_request_2_id: other_request.id, // other person's trip request id
                     };
 
@@ -172,41 +187,44 @@ export default function TripMatchingPage() {
                     if (new_data) {
                         console.log("making new trip", user.id);
                         // Insert into trips database
-                        let { data1, error } = await supabase.from("trips").insert([new_data]);
+                        let { data: data1, error } = await supabase
+                            .from("trips")
+                            .insert([new_data]);
 
-                        console.log("error2" +  error);
+                        console.log("error2" + error);
+
                         // Change awaiting in user trip
-                        let { data2, error2 } = await supabase
+                        let { data: data2, error2 } = await supabase
                             .from("trip_requests")
                             .update({ awaiting: false })
-                            .eq("id", tripRequest.id); // setting your awaiting state to false
+                            .eq("id", tripRequest[0].id); // setting your awaiting state to false
                         console.log("error2" + error2);
                         // Change awaiting in user trip
-                        let { data3, error3 } = await supabase
+                        let { data: data3, error3 } = await supabase
                             .from("trip_requests")
                             .update({ awaiting: false })
                             .eq("id", other_request.id); // setting the other person's awaiting state to false
-                        console.log("error3" + error3); 
-
-                        let { data4, error4 } = await supabase
-                            .from('trips')
-                            .select('*')
-                            .eq('trip_request_1_id', tripRequest.id)
-                            .eq('trip_request_2_id', other_request.id)
-                            .limit(1);
-                        // break from loop
-                        console.log('before pushing to currentTrip');
-                        console.log(data4);
-                        router.push(`/currentTrip?tripRequest1ID=${tripRequest.id}&tripRequest2ID=${other_request.id}`);
+                        console.log("error3" + error3);
                         
-                        console.log('after pushing to currentTrip');
+                        // let { data: data4, error4 } = await supabase
+                        //     .from("trips")
+                        //     .select("*")
+                        //     .eq("trip_request_1_id", tripRequest[0].id)
+                        //     .eq("trip_request_2_id", other_request[0].id)
+                        //     .limit(1);
+                        // break from loop
+                        console.log("before pushing to currentTrip");
+                        router.push(
+                            `/currentTrip?tripRequest1ID=${tripRequest[0].id}&tripRequest2ID=${other_request.id}`
+                        );
 
-                    }              
+                        console.log("after pushing to currentTrip");
+                    }
                 } else {
                     console.log("no match found");
                     noMatchFound(user, tripRequest); // wait for a match
                 }
-            };
+            }
         } catch (error) {
             console.log(error.message);
         } finally {
@@ -216,22 +234,28 @@ export default function TripMatchingPage() {
 
     //no match found function
     async function noMatchFound(user, tripRequest) {
-        console.log('waiting for a match in nomatchfound');
+        console.log("user", user);
+        console.log("tripRequest", tripRequest);
+        console.log("waiting for a match in nomatchfound");
         while (true) {
             setTimeout(() => {
-                console.log('waiting for a match in loop');
+                console.log("waiting for a match in loop");
             }, 5000);
 
-            let { data: tripRequest1, error, status } = await supabase
+            let {
+                data: tripRequest1,
+                error,
+                status,
+            } = await supabase
                 .from("trip_requests")
-                .select('*')
+                .select("*")
                 .eq("id", tripRequest[0].id)
                 .eq("awaiting", false)
                 .limit(1); // limiting only 1 trip request per person
 
             if (tripRequest1.length > 0) {
                 // found match
-                console.log('found match in noMatchFound');
+                console.log("found match in noMatchFound");
                 let {
                     data: trip,
                     error,
@@ -239,25 +263,20 @@ export default function TripMatchingPage() {
                 } = await supabase
                     .from("trips")
                     .select("*")
-                    .eq("trip_request_2_id", tripRequest1.id)
+                    .eq("trip_request_2_id", tripRequest1[0].id)
                     .order("created_at", { ascending: false })
-                    .limit(1)
-                    // .then((data_local) => {
-                    //     console.log(data_local);
-                    //     router.push(`/currentTrip?tripID=${data_local.trip_request_1_id}&tripRequest2ID=${data_local.trip_request_2_id}`);
-                    // }); // limiting only 1 match
-                console.log("data: ");
-                console.log(trip);
-                router.push(`/currentTrip?tripRequest1ID=${trip.trip_request_2_id}&tripRequest2ID=${trip.trip_request_1_id}`);
-
-                // router.push(`/currentTrip?tripID=${trip.trip_request_1_id}&tripRequest2ID=${trip.trip_request_2_id}`);
-                // break;
+                    .limit(1);
+                // .then((data_local) => {
+                //     console.log(data_local);
+                //     router.push(`/currentTrip?tripID=${data_local.trip_request_1_id}&tripRequest2ID=${data_local.trip_request_2_id}`);
+                // }); // limiting only 1 match
+                router.push(
+                    `/currentTrip?tripRequest1ID=${trip[0].trip_request_2_id}&tripRequest2ID=${trip[0].trip_request_1_id}`
+                );
+                break;
             }
-            
         }
     }
-
-    
 
     if (!isLoaded) {
         return <div>Loading...</div>;
@@ -293,4 +312,3 @@ export default function TripMatchingPage() {
         </>
     );
 }
-

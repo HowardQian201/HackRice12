@@ -9,8 +9,6 @@ import {
     Autocomplete,
     DirectionsRenderer,
 } from "@react-google-maps/api";
-
-
 import UniversalFadeAnimation from "./UniversalFadeComponent";
 
 import getCurrentUser from "../utils/getCurrentUser";
@@ -21,6 +19,8 @@ export default function CurrentTrip() {
         libraries: ["places"],
     });
     const router = useRouter();
+    const { tripRequest1ID, tripRequest2ID } = router.query;
+
     // Save buddy
     const [buddy, setBuddy] = useState(null);
     // save buddy's trip request
@@ -30,35 +30,43 @@ export default function CurrentTrip() {
     // save logged in user's trip request
     const [yourTripRequest, setYourTripRequest] = useState(null);
 
-    const [yourTripRequestID, setYourTripRequestID] = useState(null);
-    const [buddyTripRequestID, setBuddyTripRequestID] = useState(null);
-
-
     const [resultTripOrigin, setResultTripOrigin] = useState(null);
     const [resultTripDestination, setResultTripDestination] = useState(null);
+
+    const [midResultPoint, setMidResultPoint] = useState(null);
 
     // Google Maps stuff
     const [map, setMap] = useState(/** google.maps.Map */ null);
     const [directionsResponse, setDirectionsResponse] = useState(null);
 
+    const [statusMessage, setStatusMessage] = useState("Loading...");
+    const [progress, setProgress] = useState("Meeting");
+
     useEffect(() => {
-        getTripRequestIDs();
-    }, []);
+        if (router.query.tripRequest1ID && router.query.tripRequest2ID) {
+            getTripRequests(
+                router.query.tripRequest1ID,
+                router.query.tripRequest2ID
+            );
+        }
+    }, [router, getTripRequests]);
 
     useEffect(() => {
         if (resultTripOrigin && resultTripDestination) {
             // Take the two way points and display it on the Google map
-
+            calculateRoute(resultTripOrigin, resultTripDestination);
         }
-    }, [resultTripOrigin, resultTripDestination])
+    }, [resultTripOrigin, resultTripDestination]);
 
     /**
      * The function calculates the route between the current location and the destination.
      * Result: changes the directionsResponse, distance, and duration state variables
      */
-     function calculateRoute(resultTripOrigin, resultTripDestination) {
+    function calculateRoute(resultTripOrigin, resultTripDestination) {
         if (!resultTripOrigin || !resultTripDestination) {
-            toast.error("Oops, no result trip origin or result trip destination!")
+            toast.error(
+                "Oops, no result trip origin or result trip destination!"
+            );
         }
 
         try {
@@ -83,128 +91,94 @@ export default function CurrentTrip() {
             toast.error(error.message);
         }
     }
-    async function getTripRequestIDs() {
-        const urlParams = new URLSearchParams();
-        setYourTripRequestID(urlParams.get("tripRequest1ID"));
-        setBuddyTripRequestID(urlParams.get("tripRequest2ID"));
-
-        var user = getCurrentUser();
-        setUser(user);
-
-        getTripRequests().then(() => {
-            setResultTrip();
-        });
-        
-    }
 
     // From the trip id, get the two trip requests and figure out which trip
     // request is yours and which is your buddy's
-    async function getTripRequests() {
+    async function getTripRequests(yourTripRequestID, buddyTripRequestID) {
         try {
             // Get first trip request
-            let { data: tripRequest1 } = await supabase
+            let { data: yourTripRequest } = await supabase
                 .from("trip_requests")
                 .select("*")
                 .eq("id", yourTripRequestID)
                 .limit(1);
             // Get second trip request
-            let { data: tripRequest2 } = await supabase
+            let { data: buddyTripRequest } = await supabase
                 .from("trip_requests")
                 .select("*")
                 .eq("id", buddyTripRequestID)
                 .limit(1);
-            console.log(tripRequest1);
-            console.log(tripRequest2);
-            console.log('here');
+            console.log("tripRequest1", yourTripRequest);
+            console.log("tripRequest2", buddyTripRequest);
+            // Get the user from yourTripRequest in supabase
+            let { data: yourUser } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", yourTripRequest[0].user_id)
+                .limit(1);
+            // Get the user from buddyTripRequest in supabase
+            let { data: buddyUser } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", buddyTripRequest[0].user_id)
+                .limit(1);
+            console.log("yourUser", yourUser);
+            setUser(yourUser[0]);
+            console.log("buddyUser", buddyUser);
+            setBuddy(buddyUser[0]);
 
-            if (tripRequest1.user_id != yourID) {
-                console.log('here1');
-                // We found the trip request corresponding to the buddy. Set stuff.
-                // Find this buddy profile in the profiles table
-                let { data: buddyProfile } = await supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("user_id", tripRequest1.user_id)
-                    .limit(1);
-                setBuddy(buddyProfile);
-                console.log('buddy', buddy);
-
-                // Find your profile in the profiles table
-                let { data: yourProfile } = await supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("user_id", tripRequest2.user_id)
-                    .limit(1);
-                setUser(yourProfile);
-                console.log(user);
-
-                setBuddyTripRequest(tripRequest1);
-                setYourTripRequest(tripRequest2);
-                console.log(buddyTripRequest);
-                console.log(yourTripRequest);
-
-            } else if (tripRequest1.user_id === yourID) {
-                console.log('here2');
-                // We found the trip request corresponding to the buddy. Set stuff.
-                // Find this buddy profile in the profiles table
-                let { data: buddyProfile } = await supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("user_id", tripRequest2.user_id)
-                    .limit(1);
-                setBuddy(buddyProfile);
-                console.log('buddy', buddy);
-
-                // Find your profile in the profiles table
-                let { data: yourProfile } = await supabase
-                    .from("profiles")
-                    .select("*")
-                    .eq("user_id", tripRequest1.user_id)
-                    .limit(1);
-                setUser(yourProfile);
-                console.log(user);
-
-                setBuddyTripRequest(tripRequest2);
-                setYourTripRequest(tripRequest1);
-                console.log(buddyTripRequest);
-                console.log(yourTripRequest);
-            }
+            setResultTrip(yourTripRequest, buddyTripRequest);
         } catch (error) {
             console.log("error", error);
         }
     }
 
+    function setResultTrip(yourTripRequest, buddyTripRequest) {
+        console.log("yourTripRequest in setResultTrip", yourTripRequest);
+        console.log("buddyTripRequest in setResultTrip", buddyTripRequest);
+        if (buddyTripRequest.created_at > yourTripRequest.created_at) {
+            setResultTripOrigin({
+                lat: yourTripRequest[0].origin_lat,
+                lng: yourTripRequest[0].origin_lon,
+            });
+        } else {
+            setResultTripOrigin({
+                lat: buddyTripRequest[0].origin_lat,
+                lng: buddyTripRequest[0].origin_lon,
+            });
+        }
+        // TODO: add state for other person's destination for marker
+        setResultTripDestination({
+            lat: yourTripRequest[0].dest_lat,
+            lng: yourTripRequest[0].dest_lon,
+        });
 
-    function setResultTrip() {
-        // if (buddyTripRequest.created_at > yourTripRequest.created_at) {
-        //     setResultTripOrigin(new google.maps.LatLng(yourTripRequest.origin_lat, yourTripRequest.origin_lon));
-        // } else {
-        //     setResultTripOrigin(new google.maps.LatLng(buddyTripRequest.origin_lat, buddyTripRequest.origin_lon));
-        // }
-        // setResultTripDestination(new google.maps.LatLng(yourTripRequest.dest_lat, yourTripRequest.dest_lon));
+        setMidResultPoint({
+            lat: buddyTripRequest[0].dest_lat,
+            lng: buddyTripRequest[0].dest_lon
+        });
 
-        setResultTripOrigin(new google.maps.LatLng(yourTripRequest.origin_lat, yourTripRequest.origin_lon));
-        setResultTripDestination(new google.maps.LatLng(yourTripRequest.dest_lat, yourTripRequest.dest_lon));
+        setStatusMessage("Meet at Point A to walk together");
     }
 
     const completeTripAndRedirect = () => {
         console.log("buddy", buddy);
         if (buddy) {
-            router.redirect(`/rateUser?${buddy.id}`);
+            router.push(`/rateUser?buddyId=${buddy.id}`);
         }
-    }
+    };
 
     if (!isLoaded) {
         return <div>Loading...</div>;
     }
     return (
         <>
-            <div className="w-screen h-[60vh]">
-            <div>
-                <h1 className="interSubheader absolute top-4 z-10 left-4 shadow-2xl bg-black text-white px-3 py-2 rounded-full">
-                    Walkify
-                </h1>
-            </div>
+            <div className="w-screen h-[50vh]">
+                <div>
+                    <h1 className="interSubheader absolute top-4 z-10 left-4 shadow-2xl bg-black text-white px-3 py-2 rounded-full">
+                        Walkify
+                    </h1>
+                </div>
                 <GoogleMap
                     mapContainerStyle={{
                         width: "100%",
@@ -227,51 +201,70 @@ export default function CurrentTrip() {
                     )}
                 </GoogleMap>
             </div>
+            <section className="flex flex-col justify-start items-center gap-10 bg-white shadow-2xl rounded-2xl w-screen h-[50vh]">
+                <div className=" flex justify-center items-center gap-2 border-b border-black/10 w-screen h-20 shadow-md px-4">
+                    <h1 className=" text-lg font-medium text-center">
+                        {/* Meet at Point A to walk together */}
+                        {statusMessage}
+                    </h1>
+                    {statusMessage !== "Loading..." && (
+                        <div className="bg-black text-white w-14 h-14 flex justify-center items-center">
+                            <h1 className="interBody text-2xl">Now</h1>
+                        </div>
+                    )}
+                </div>
+                <div className="flex justify-center items-center gap-4">
+                    <Avatar
+                        url={buddy?.avatar_url}
+                        className="w-20 h-20 rounded-full"
+                        showUpload={false}
+                    />
 
-            <Avatar
-                url={buddy.avatar_url}
-                size={150}
-            />
-            <h1 className="interHeader text-center">
-                {buddy.firstName} {buddy.lastName} 
-            </h1>
-            <h1 className="interHeader text-center">
-                {buddy.avg_rating}
-            </h1>
-
-            {/* {
-                // If the user has entered a destination, show the trip confirmation component
-                directionsResponse && (
+                    <div className="flex flex-col justify-center items-center gap-2">
+                        <h1 className="interHeader text-center">
+                            {buddy?.firstName} {buddy?.lastName}
+                        </h1>
+                        <h1 className="interBody text-center opacity-70">
+                            {buddy?.university}
+                            {", "}
+                            {buddy?.avg_rating} stars
+                        </h1>
+                    </div>
+                </div>
+                {progress === "Meeting" && (
                     <button
-                        disabled={
-                            destinationsRef.current.value < 10 ? true : false
-                        }
                         onClick={() => {
-                            // createTripRequest();
+                            setProgress("In Progress");
+                            setStatusMessage(
+                                "Enjoy your walk, get to know each other!"
+                            );
                         }}
-                        className="absolute bottom-32 w-[95vw] m-auto left-0 right-0 bg-black text-white text-2xl font-medium px-10 py-4"
-                    ></button>
-                )
-            } */}
-            <section className="flex flex-col bg-white shadow-2xl rounded-2xl w-screen h-[40vh]">
-              <div className="border-b border-black/90 w-screen h-1/3">
-                <h1 className=" text-2xl font-medium">
-                  Current Trip
-                </h1>
-              </div>
-              <button
-                onClick={() => {
-                    completeTripAndRedirect()
-
-                }}
-                className="w-[95vw] bg-black text-white text-2xl font-medium px-10 py-4 rounded-xl"
-            >
-                            Trip Completed
-            </button>
+                        className="w-[95vw] bg-black text-white text-2xl font-medium px-10 py-4 rounded-xl"
+                    >
+                        Successfully Met
+                    </button>
+                )}
+                {progress === "In Progress" && (
+                    <button
+                        onClick={() => {
+                            setProgress("Completed");
+                            setStatusMessage(
+                                "Have a great day!"
+                            );
+                            setTimeout(() => {
+                                completeTripAndRedirect();
+                            }, 2000);
+                        }}
+                        className="w-[95vw] bg-black text-white text-2xl font-medium px-10 py-4 rounded-xl"
+                    >
+                        Complete Trip
+                    </button>
+                )}
             </section>
+
             <div>
                 <button
-                    className="inline-flex absolute bottom-4 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    className="inline-flex absolute bottom-8 left-4 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     onClick={() => supabase.auth.signOut()}
                 >
                     Sign Out

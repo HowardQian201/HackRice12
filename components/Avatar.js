@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 
-export default function Avatar({ url, size, onUpload }) {
+export default function Avatar({ url, size, onUpload, showUpload = true, className="w-48 h-48 lg:w-60 lg:h-60 rounded-md" }) {
     const [avatarUrl, setAvatarUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
 
@@ -59,27 +59,26 @@ export default function Avatar({ url, size, onUpload }) {
                 <img
                     src={avatarUrl}
                     alt="Avatar"
-                    className="w-48 h-48 lg:w-60 lg:h-60 rounded-md"
+                    className={className}
                 />
             ) : (
-                <div
-                    className=""
-                    style={{ height: size, width: size }}
-                />
+                <div className="" />
             )}
-            <div className="mt-2">
-                <label className="interBody" htmlFor="single">
-                    {uploading ? "Uploading ..." : "Upload a file"}
-                </label>
-                <input
-                    className="hidden absolute"
-                    type="file"
-                    id="single"
-                    accept="image/*"
-                    onChange={uploadAvatar}
-                    disabled={uploading}
-                />
-            </div>
+            {showUpload && (
+                <div className="mt-2">
+                    <label className="interBody" htmlFor="single">
+                        {uploading ? "Uploading ..." : "Upload a file"}
+                    </label>
+                    <input
+                        className="hidden absolute"
+                        type="file"
+                        id="single"
+                        accept="image/*"
+                        onChange={uploadAvatar}
+                        disabled={uploading}
+                    />
+                </div>
+            )}
         </div>
     );
 }
