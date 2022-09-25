@@ -69,7 +69,6 @@ export default function StartTripPage() {
         });
     }
 
-
     /**
      * Creates a trip request by storing it in the supabase database.
      * Uses the following state variables: destination, origin,
@@ -82,7 +81,9 @@ export default function StartTripPage() {
             // Don't need origin because that will just be current location
             const geocoder = new google.maps.Geocoder();
             geocoder
-                .geocode({ placeId: directionsResponse.geocoded_waypoints[1].place_id })
+                .geocode({
+                    placeId: directionsResponse.geocoded_waypoints[1].place_id,
+                })
                 .then(async ({ results }) => {
 
                     // setDestLocation({
@@ -97,13 +98,20 @@ export default function StartTripPage() {
                         dest_lat: results[0].geometry.location.lat(),
                         awaiting: true,
                     };
-                    let { error } = await supabase.from("trip_requests").insert(data);
+
+                    console.log("here2");
+
+                    console.log(data);
+
+                    let { error } = await supabase
+                        .from("trip_requests")
+                        .insert(data);
+                    console.log("here3");
+
                     if (error) {
                         throw error;
                     }
-
-                    });
-            
+                });
         } catch (error) {
             alert(error.message);
         } finally {
@@ -142,15 +150,12 @@ export default function StartTripPage() {
         } catch (error) {
             alert(error.message);
         }
-
     }
-
 
     if (!isLoaded) {
         return <div>Loading...</div>;
     }
 
-    
     return (
         <>
             {/* <WhereToInput /> */}
@@ -230,7 +235,13 @@ export default function StartTripPage() {
             }
             <div>
                 <button
-                    className="inline-flex absolute bottom-10 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    className="inline-flex absolute bottom-20 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    onClick={() => router.push("/profilePage")}
+                >
+                    Profile
+                </button>
+                <button
+                    className="inline-flex absolute bottom-9 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     onClick={() => supabase.auth.signOut()}
                 >
                     Sign Out

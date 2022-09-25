@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 import UniversalFadeAnimation from "./UniversalFadeComponent";
-
+import { toast } from "react-hot-toast";
 export default function Auth() {
     const [isLoading, setIsLoading] = useState(true);
     const [session, setSession] = useState(null);
@@ -44,7 +44,7 @@ export default function Auth() {
             subscription?.unsubscribe();
         };
     }, []);
-
+    
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [showInput, setShowInput] = useState(false);
@@ -58,9 +58,9 @@ export default function Auth() {
             }
             const { error } = await supabase.auth.signInWithOtp({ email });
             if (error) throw error;
-            alert("Check your email for the login link!");
+            toast.success("Check your email for the login link!");
         } catch (error) {
-            alert(error.error_description || error.message);
+            toast(error.error_description || error.message);
         } finally {
             setLoading(false);
         }
