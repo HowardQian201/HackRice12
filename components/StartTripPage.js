@@ -225,6 +225,7 @@ export default function StartTripPage() {
                 </Autocomplete>
             </div>
             {
+                
                 // If the user has entered a destination, show the trip confirmation component
                 directionsResponse && (
                     <div className="absolute flex flex-col justify-between p-4 bottom-0 bg-white h-[40vh] w-screen rounded-xl">
@@ -241,7 +242,7 @@ export default function StartTripPage() {
                         >
                             Start Trip Matching
                         </button>
-
+                        <h1 className="interBody"> - You'll be matched with another verified female student from your school.</h1>
                         <div className="flex gap-2 items-center justify-end mb-4">
                             <button
                                 className="inline-flex p-4 items-center rounded-full bg-gray-200 text-sm font-medium text-gray-700 shadow-sm hover:opacity-90 focus:outline-none"
