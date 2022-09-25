@@ -13,9 +13,9 @@ export default function Account({ session }) {
     const [avatar_url, setAvatarUrl] = useState(null);
     const [filledInfo, setFilledInfo] = useState(false);
     const [user, setUser] = useState(null);
-
     // Next router
     const router = useRouter();
+
     useEffect(() => {
         getProfile();
     }, [session]);
@@ -174,13 +174,13 @@ export default function Account({ session }) {
                         Walkify
                     </h1>
                 </UniversalFadeAnimation>
-                <div className="flex flex-col gap-20 pt-20 md:flex-row justify-center items-center p-10 lg:p-20">
+                <div className="flex flex-col gap-14 pt-20 md:flex-row justify-center items-center p-10 lg:p-20">
                     <section className="flex flex-col justify-center items-center lg:w-1/2">
                         <h1 className="interHeader text-center">
                             {!filledInfo &&
-                                "Welcome. Fill out all info to get started!"}
+                                "Welcome to Walkify! Tell us about yourself."}
                             {filledInfo &&
-                                "You're good to go! Click the button below to get started."}
+                                "You're good to go! Click the button to get started."}
                         </h1>
                     </section>
                     <section className="flex flex-col w-full lg:flex-row gap-10 justify-center items-center md:w-1/2">

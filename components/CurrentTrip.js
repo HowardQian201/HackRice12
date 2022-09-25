@@ -1,6 +1,7 @@
 import { React, useState, useEffect, useRef } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { useRouter } from "next/router";
+import Avatar from "./Avatar";
 import {
     useLoadScript,
     GoogleMap,
@@ -9,6 +10,9 @@ import {
     DirectionsRenderer,
 } from "@react-google-maps/api";
 
+
+import UniversalFadeAnimation from "./UniversalFadeComponent";
+
 import getCurrentUser from "../utils/getCurrentUser";
 
 export default function CurrentTrip() {
@@ -16,9 +20,7 @@ export default function CurrentTrip() {
         googleMapsApiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY,
         libraries: ["places"],
     });
-
-    // Trip id (gotten from URL)
-    const [tripID, setTripID] = useState(null);
+    const router = useRouter();
     // Save buddy
     const [buddy, setBuddy] = useState(null);
     // save buddy's trip request
@@ -28,6 +30,10 @@ export default function CurrentTrip() {
     // save logged in user's trip request
     const [yourTripRequest, setYourTripRequest] = useState(null);
 
+    const [yourTripRequestID, setYourTripRequestID] = useState(null);
+    const [buddyTripRequestID, setBuddyTripRequestID] = useState(null);
+
+
     const [resultTripOrigin, setResultTripOrigin] = useState(null);
     const [resultTripDestination, setResultTripDestination] = useState(null);
 
@@ -36,47 +42,83 @@ export default function CurrentTrip() {
     const [directionsResponse, setDirectionsResponse] = useState(null);
 
     useEffect(() => {
-        getURLParams();
+        getTripRequestIDs();
     }, []);
 
-    async function getURLParams() {
+    useEffect(() => {
+        if (resultTripOrigin && resultTripDestination) {
+            // Take the two way points and display it on the Google map
+
+        }
+    }, [resultTripOrigin, resultTripDestination])
+
+    /**
+     * The function calculates the route between the current location and the destination.
+     * Result: changes the directionsResponse, distance, and duration state variables
+     */
+     function calculateRoute(resultTripOrigin, resultTripDestination) {
+        if (!resultTripOrigin || !resultTripDestination) {
+            toast.error("Oops, no result trip origin or result trip destination!")
+        }
+
+        try {
+            const directionsService = new google.maps.DirectionsService();
+            directionsService.route(
+                {
+                    origin: resultTripOrigin,
+                    destination: resultTripDestination,
+                    travelMode: google.maps.TravelMode.WALKING,
+                },
+                (result, status) => {
+                    if (status === google.maps.DirectionsStatus.OK) {
+                        setDirectionsResponse(result);
+                        // setDistance(result.routes[0].legs[0].distance.text);
+                        // setDuration(result.routes[0].legs[0].duration.text);
+                    } else {
+                        console.error(`error fetching directions ${result}`);
+                    }
+                }
+            );
+        } catch (error) {
+            toast.error(error.message);
+        }
+    }
+    async function getTripRequestIDs() {
         const urlParams = new URLSearchParams();
-        setTripID(urlParams.get("tripID"));
+        setYourTripRequestID(urlParams.get("tripRequest1ID"));
+        setBuddyTripRequestID(urlParams.get("tripRequest2ID"));
 
         var user = getCurrentUser();
         setUser(user);
 
-        getTripRequests();
+        getTripRequests().then(() => {
+            setResultTrip();
+        });
+        
     }
 
     // From the trip id, get the two trip requests and figure out which trip
     // request is yours and which is your buddy's
     async function getTripRequests() {
         try {
-            // Get the trip requests from the trip id
-            let {
-                data: trip,
-                error,
-                status,
-            } = await supabase
-                .from("trips")
-                .select("trip_request_1_id, trip_request_2_id")
-                .eq("id", tripID)
-                .limit(1);
             // Get first trip request
             let { data: tripRequest1 } = await supabase
                 .from("trip_requests")
                 .select("*")
-                .eq("id", trip.trip_request_1_id)
+                .eq("id", yourTripRequestID)
                 .limit(1);
             // Get second trip request
             let { data: tripRequest2 } = await supabase
                 .from("trip_requests")
                 .select("*")
-                .eq("id", trip.trip_request_2_id)
+                .eq("id", buddyTripRequestID)
                 .limit(1);
+            console.log(tripRequest1);
+            console.log(tripRequest2);
+            console.log('here');
 
             if (tripRequest1.user_id != yourID) {
+                console.log('here1');
                 // We found the trip request corresponding to the buddy. Set stuff.
                 // Find this buddy profile in the profiles table
                 let { data: buddyProfile } = await supabase
@@ -85,6 +127,7 @@ export default function CurrentTrip() {
                     .eq("user_id", tripRequest1.user_id)
                     .limit(1);
                 setBuddy(buddyProfile);
+                console.log('buddy', buddy);
 
                 // Find your profile in the profiles table
                 let { data: yourProfile } = await supabase
@@ -93,11 +136,15 @@ export default function CurrentTrip() {
                     .eq("user_id", tripRequest2.user_id)
                     .limit(1);
                 setUser(yourProfile);
+                console.log(user);
 
                 setBuddyTripRequest(tripRequest1);
-
                 setYourTripRequest(tripRequest2);
-            } else if (tripRequest1.user_id == yourID) {
+                console.log(buddyTripRequest);
+                console.log(yourTripRequest);
+
+            } else if (tripRequest1.user_id === yourID) {
+                console.log('here2');
                 // We found the trip request corresponding to the buddy. Set stuff.
                 // Find this buddy profile in the profiles table
                 let { data: buddyProfile } = await supabase
@@ -106,6 +153,7 @@ export default function CurrentTrip() {
                     .eq("user_id", tripRequest2.user_id)
                     .limit(1);
                 setBuddy(buddyProfile);
+                console.log('buddy', buddy);
 
                 // Find your profile in the profiles table
                 let { data: yourProfile } = await supabase
@@ -114,47 +162,49 @@ export default function CurrentTrip() {
                     .eq("user_id", tripRequest1.user_id)
                     .limit(1);
                 setUser(yourProfile);
+                console.log(user);
 
                 setBuddyTripRequest(tripRequest2);
-
                 setYourTripRequest(tripRequest1);
+                console.log(buddyTripRequest);
+                console.log(yourTripRequest);
             }
         } catch (error) {
             console.log("error", error);
         }
     }
 
-    /**
-     * Convert google place id to latitude and longitude
-     */
-    function convert_place_id_to_lat_lon(place_id) {
-        const geocoder = new google.maps.Geocoder();
-        let location_h = null;
-        geocoder
-            .geocode({ placeId: place_id })
-            .then(({ results }) => {
-                location_h = results[0].geometry.location;
-            })
-            .catch((e) => alert(e));
-        console.log(location_h);
-        return location_h;
-    }
 
     function setResultTrip() {
-        if (buddyTripRequest.created_at > yourTripRequest.created_at) {
-            setResultTripOrigin(yourTripRequest.origin_place_id);
-        } else {
-            setResultTripOrigin(buddyTripRequest.origin_place_id);
+        // if (buddyTripRequest.created_at > yourTripRequest.created_at) {
+        //     setResultTripOrigin(new google.maps.LatLng(yourTripRequest.origin_lat, yourTripRequest.origin_lon));
+        // } else {
+        //     setResultTripOrigin(new google.maps.LatLng(buddyTripRequest.origin_lat, buddyTripRequest.origin_lon));
+        // }
+        // setResultTripDestination(new google.maps.LatLng(yourTripRequest.dest_lat, yourTripRequest.dest_lon));
+
+        setResultTripOrigin(new google.maps.LatLng(yourTripRequest.origin_lat, yourTripRequest.origin_lon));
+        setResultTripDestination(new google.maps.LatLng(yourTripRequest.dest_lat, yourTripRequest.dest_lon));
+    }
+
+    const completeTripAndRedirect = () => {
+        console.log("buddy", buddy);
+        if (buddy) {
+            router.redirect(`/rateUser?${buddy.id}`);
         }
-        setResultTripDestination(yourTripRequest.destination_place_id);
     }
 
     if (!isLoaded) {
         return <div>Loading...</div>;
     }
     return (
-        <div className="">
+        <>
             <div className="w-screen h-[60vh]">
+            <div>
+                <h1 className="interSubheader absolute top-4 z-10 left-4 shadow-2xl bg-black text-white px-3 py-2 rounded-full">
+                    Walkify
+                </h1>
+            </div>
                 <GoogleMap
                     mapContainerStyle={{
                         width: "100%",
@@ -177,6 +227,18 @@ export default function CurrentTrip() {
                     )}
                 </GoogleMap>
             </div>
+
+            <Avatar
+                url={buddy.avatar_url}
+                size={150}
+            />
+            <h1 className="interHeader text-center">
+                {buddy.firstName} {buddy.lastName} 
+            </h1>
+            <h1 className="interHeader text-center">
+                {buddy.avg_rating}
+            </h1>
+
             {/* {
                 // If the user has entered a destination, show the trip confirmation component
                 directionsResponse && (
@@ -197,6 +259,15 @@ export default function CurrentTrip() {
                   Current Trip
                 </h1>
               </div>
+              <button
+                onClick={() => {
+                    completeTripAndRedirect()
+
+                }}
+                className="w-[95vw] bg-black text-white text-2xl font-medium px-10 py-4 rounded-xl"
+            >
+                            Trip Completed
+            </button>
             </section>
             <div>
                 <button
@@ -206,6 +277,6 @@ export default function CurrentTrip() {
                     Sign Out
                 </button>
             </div>
-        </div>
+        </>
     );
 }

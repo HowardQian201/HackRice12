@@ -69,10 +69,14 @@ export default function Auth() {
     return (
         <UniversalFadeAnimation>
             <div className="flex flex-col gap-8 justify-center items-center w-screen h-screen bg-white">
-                <h1 className="interSubheader">Walkify</h1>
+            <UniversalFadeAnimation>
+                    <h1 className="interSubheader shadow-2xl bg-black text-white px-3 py-2 rounded-full">
+                        Walkify
+                    </h1>
+                </UniversalFadeAnimation>
                 <img src="/images/authCityWomen.png" className="w-[80vw]" />
 
-                <h1 className="interHeader">Safe. Simple. Social.</h1>
+                <h1 className="interSubheader">Safely walk home together.</h1>
                 <div className="mt-10 flex flex-col justify-center items-center gap-4">
                     <input
                         className="w-[70vw] rounded-full interBody px-10 py-4"
@@ -86,7 +90,7 @@ export default function Auth() {
                             e.preventDefault();
                             handleLogin(email);
                         }}
-                        className="interSubheader"
+                        className="interSubheader w-full bg-black text-white py-4 px-10 rounded-full"
                         disabled={false}
                     >
                         {loading ? "Loading..." : "Send magic link"}
