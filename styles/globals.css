@@ -5,7 +5,6 @@
 .b {
   background-color: 2px solid red;
 }
-
 .interHeader {
   @apply text-4xl font-semibold tracking-tight;
 }

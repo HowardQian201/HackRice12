@@ -23,7 +23,7 @@ export default function Auth() {
             if (mounted) {
                 if (session) {
                     setSession(session);
-                    router.push("/profilePage")
+                    router.push("/profilePage");
                 }
 
                 setIsLoading(false);
@@ -68,33 +68,30 @@ export default function Auth() {
 
     return (
         <UniversalFadeAnimation>
-            <div className="flex flex-col justify-center items-center w-screen h-screen bg-white">
-                <h1 className="interHeader">Walkify</h1>
-                <img src="/images/authCityWomen.png"/> 
+            <div className="flex flex-col gap-8 justify-center items-center w-screen h-screen bg-white">
+                <h1 className="interSubheader">Walkify</h1>
+                <img src="/images/authCityWomen.png" className="w-[80vw]" />
 
-
-                <h2 className="">
-                Sign in via magic link with your email below
-            </h2>
-            <div className="">
-                <input
-                    className=""
-                    type="email"
-                    placeholder="you@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <button
-                    onClick={(e) => {
-                        e.preventDefault();
-                        handleLogin(email);
-                    }}
-                    className=""
-                    disabled={false}
-                >
-                    {loading ? "Loading..." : "Send magic link"}
-                </button>
-            </div>
+                <h1 className="interHeader">Safe. Simple. Social.</h1>
+                <div className="mt-10 flex flex-col justify-center items-center gap-4">
+                    <input
+                        className="w-[70vw] rounded-full interBody px-10 py-4"
+                        type="email"
+                        placeholder="you@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleLogin(email);
+                        }}
+                        className="interSubheader"
+                        disabled={false}
+                    >
+                        {loading ? "Loading..." : "Send magic link"}
+                    </button>
+                </div>
             </div>
         </UniversalFadeAnimation>
     );
