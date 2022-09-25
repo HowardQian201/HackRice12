@@ -18,6 +18,7 @@ export default function StartTripPage() {
     const [session, setSession] = useState(null);
     // Format = { lat: typeof float, lng: typeof float }
     const [currentLocation, setCurrentLocation] = useState(null);
+    const [destLocation, setDestLocation] = useState(null);
     const [directionsResponse, setDirectionsResponse] = useState(null);
     const [distance, setDistance] = useState(null);
     const [duration, setDuration] = useState(null);
@@ -79,18 +80,34 @@ export default function StartTripPage() {
         try {
             const user = await getCurrentUser();
 
+            const geocoder = new google.maps.Geocoder();
+            geocoder
+                .geocode({ placeId: directionsResponse.geocoded_waypoints[1].place_id })
+                .then(({ results }) => {
+                    console.log("in here")
+                    console.log(results[0].geometry.location.lat());
+                    console.log(results[0].geometry.location.lng());
+
+                    setDestLocation({
+                        lat: results[0].geometry.location.lat(),
+                        lng: results[0].geometry.location.lng(),
+                    });
+
+                });
+
             const data = {
                 user_id: user.id,
-                origin_place_id:
-                    directionsResponse.geocoded_waypoints[0].place_id,
-                destination_place_id:
-                    directionsResponse.geocoded_waypoints[1].place_id,
+                origin_lon: currentLocation.lng,
+                origin_lat: currentLocation.lat,
+                dest_lon: destLocation.lng,
+                dest_lat: destLocation.lat,
                 awaiting: true,
             };
 
+            
             console.log(data);
 
-            let { error } = await supabase.from("trip_requests").insert([data]);
+            let { error } = await supabase.from("temp_trip_requests").insert(data);
 
             if (error) {
                 throw error;
@@ -122,6 +139,7 @@ export default function StartTripPage() {
                 },
                 (result, status) => {
                     if (status === google.maps.DirectionsStatus.OK) {
+                        console.log(result);
                         setDirectionsResponse(result);
                         setDistance(result.routes[0].legs[0].distance.text);
                         setDuration(result.routes[0].legs[0].duration.text);
