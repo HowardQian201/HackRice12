@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../utils/supabaseClient";
 import WhereToInput from "./whereToInput";
 import getCurrentUser from "../utils/getCurrentUser";
+import UniversalFadeAnimation from "./UniversalFadeComponent";
 import {
     useLoadScript,
     GoogleMap,
@@ -184,7 +185,14 @@ export default function StartTripPage() {
                     )}
                 </GoogleMap>
             </div>
-            <div className="flex justify-start items-center absolute left-0 right-0 m-auto top-14 z-10 w-[95vw] h-14 bg-white shadow-lg rounded-full">
+            <div>
+                <UniversalFadeAnimation>
+                    <h1 className="interSubheader absolute top-4 left-4 shadow-2xl bg-black text-white px-3 py-2 rounded-full">
+                        Walkify
+                    </h1>
+                </UniversalFadeAnimation>
+            </div>
+            <div className="flex justify-start items-center absolute left-0 right-0 m-auto top-20 z-10 w-[95vw] h-14 bg-white shadow-lg rounded-full">
                 <button
                     onClick={() => {
                         // Calculate the route and add new component to confirm trip
@@ -210,7 +218,7 @@ export default function StartTripPage() {
                     <input
                         type="text"
                         placeholder="Where to?"
-                        className="w-[85vw] h-full bg-transparent outline-none text-lg font-medium border-none focus:border-none focus:ring-0"
+                        className="w-[85vw] h-full bg-transparent outline-none text-lg font-medium border-none focus:border-none focus:ring-0 pr-6"
                         ref={destinationsRef}
                         autoComplete={"off"}
                         min={10}
@@ -220,33 +228,49 @@ export default function StartTripPage() {
             {
                 // If the user has entered a destination, show the trip confirmation component
                 directionsResponse && (
-                    <button
-                        disabled={
-                            destinationsRef.current.value < 10 ? true : false
-                        }
-                        onClick={() => {
-                            createTripRequest();
-                        }}
-                        className="absolute bottom-32 w-[95vw] m-auto left-0 right-0 bg-black text-white text-2xl font-medium px-10 py-4"
-                    >
-                        Start Trip Matching
-                    </button>
+                    <div className="absolute flex flex-col justify-between p-4 bottom-0 bg-white h-[40vh] w-screen rounded-xl">
+                        <button
+                            disabled={
+                                destinationsRef.current.value < 10
+                                    ? true
+                                    : false
+                            }
+                            onClick={() => {
+                                createTripRequest();
+                            }}
+                            className="w-[95vw] bg-black text-white text-2xl font-medium px-10 py-4 rounded-xl"
+                        >
+                            Start Trip Matching
+                        </button>
+
+                        <div className="flex gap-2 items-center justify-end mb-4">
+                            <button
+                                className="inline-flex p-4 items-center rounded-full bg-gray-200 text-sm font-medium text-gray-700 shadow-sm hover:opacity-90 focus:outline-none"
+                                onClick={() => router.push("/profilePage")}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                    className="w-6 h-6"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                            </button>
+                            <button
+                                className="interBody px-4 py-2 inline-flex items-center rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                onClick={() => supabase.auth.signOut()}
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
                 )
             }
-            <div>
-                <button
-                    className="inline-flex absolute bottom-20 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    onClick={() => router.push("/profilePage")}
-                >
-                    Profile
-                </button>
-                <button
-                    className="inline-flex absolute bottom-9 left-0 items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    onClick={() => supabase.auth.signOut()}
-                >
-                    Sign Out
-                </button>
-            </div>
         </>
     );
 }

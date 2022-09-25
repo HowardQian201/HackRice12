@@ -3,6 +3,7 @@ import { supabase } from "../utils/supabaseClient";
 import Avatar from "./Avatar";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
+import UniversalFadeAnimation from "./UniversalFadeComponent";
 export default function Account({ session }) {
     const [loading, setLoading] = useState(true);
     const [username, setUsername] = useState("");
@@ -11,6 +12,8 @@ export default function Account({ session }) {
     const [university, setUniversity] = useState("");
     const [avatar_url, setAvatarUrl] = useState(null);
     const [filledInfo, setFilledInfo] = useState(false);
+    const [user, setUser] = useState(null);
+
     // Next router
     const router = useRouter();
     useEffect(() => {
@@ -49,7 +52,6 @@ export default function Account({ session }) {
         try {
             setLoading(true);
             const user = await getCurrentUser();
-
             let { data, error, status } = await supabase
                 .from("profiles")
                 .select(`username, firstName, lastName, university, avatar_url`)
@@ -66,6 +68,14 @@ export default function Account({ session }) {
                 setLastName(data.lastName);
                 setUniversity(data.university);
                 setAvatarUrl(data.avatar_url);
+                if (
+                    data.username !== null &&
+                    data.firstName !== null &&
+                    data.lastName !== null &&
+                    data.university !== null
+                ) {
+                    setFilledInfo(true);
+                }
             }
         } catch (error) {
             toast(error.message);
@@ -112,7 +122,7 @@ export default function Account({ session }) {
         }
     }
 
-    let handleGetStartedClick = async () => {
+    let handleGetStartedClick = () => {
         if (checkIfUserFilledInfo()) {
             router.push("/startTripPage");
         } else {
@@ -157,172 +167,188 @@ export default function Account({ session }) {
         }
     };
     return (
-        <div className="flex flex-col gap-20 md:flex-row justify-center items-center p-10 lg:p-20">
-            <section className="flex flex-col justify-center items-center lg:w-1/2">
-                <h1 className="interHeader text-center">
-                    {!filledInfo &&
-                        "Welcome. Fill out all info to get started!"}
-                    {filledInfo &&
-                        "You're good to go! Click the button below to get started."}
-                </h1>
-                {filledInfo && (
-                    <button
-                        className="fixed flex justify-center items-center gap-4 bottom-10 left-0 right-0 w-[95vw] m-auto bg-black text-white text-2xl font-medium px-10 py-4"
-                        onClick={() => handleGetStartedClick()}
-                    >
-                        Get Started
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            className="w-6 h-6"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
-                    </button>
-                )}
-            </section>
-            <section className="flex flex-col w-full lg:flex-row gap-10 justify-center items-center md:w-1/2">
-                <Avatar
-                    url={avatar_url}
-                    size={150}
-                    onUpload={(url) => {
-                        setAvatarUrl(url);
-                        updateProfile({
-                            username,
-                            firstName,
-                            lastName,
-                            university,
-                            avatar_url: url,
-                        });
-                    }}
-                />
-                <form
-                    className="flex flex-col gap-4 w-full sm:w-60"
-                    
+        <>
+            <UniversalFadeAnimation>
+                <UniversalFadeAnimation>
+                    <h1 className="interSubheader fixed top-4 left-4 shadow-2xl bg-black text-white px-3 py-2 rounded-full">
+                        Walkify
+                    </h1>
+                </UniversalFadeAnimation>
+                <div className="flex flex-col gap-20 pt-20 md:flex-row justify-center items-center p-10 lg:p-20">
+                    <section className="flex flex-col justify-center items-center lg:w-1/2">
+                        <h1 className="interHeader text-center">
+                            {!filledInfo &&
+                                "Welcome. Fill out all info to get started!"}
+                            {filledInfo &&
+                                "You're good to go! Click the button below to get started."}
+                        </h1>
+                    </section>
+                    <section className="flex flex-col w-full lg:flex-row gap-10 justify-center items-center md:w-1/2">
+                        <Avatar
+                            url={avatar_url}
+                            size={150}
+                            onUpload={(url) => {
+                                setAvatarUrl(url);
+                                updateProfile({
+                                    username,
+                                    firstName,
+                                    lastName,
+                                    university,
+                                    avatar_url: url,
+                                });
+                            }}
+                        />
+                        <form className="flex flex-col gap-4 w-full sm:w-60">
+                            <div>
+                                <label
+                                    htmlFor="email"
+                                    className="interBody block text-sm font-medium text-gray-700"
+                                >
+                                    Email
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        id="email"
+                                        type="text"
+                                        name="email"
+                                        className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm cursor-not-allowed"
+                                        value={session.user.email}
+                                        disabled
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="username"
+                                    className="interBody block text-sm font-medium text-gray-700"
+                                >
+                                    Username
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        id="username"
+                                        type="text"
+                                        required={true}
+                                        className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
+                                        value={username || ""}
+                                        onChange={(e) =>
+                                            setUsername(e.target.value)
+                                        }
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="firstName"
+                                    className="interBody block text-sm font-medium text-gray-700"
+                                >
+                                    First Name
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        id="firstName"
+                                        type="text"
+                                        required={true}
+                                        className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
+                                        value={firstName || ""}
+                                        onChange={(e) =>
+                                            setFirstName(e.target.value)
+                                        }
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="lastName"
+                                    className="interBody block text-sm font-medium text-gray-700"
+                                >
+                                    Last Name
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        id="lastName"
+                                        type="text"
+                                        required={true}
+                                        className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
+                                        value={lastName || ""}
+                                        onChange={(e) =>
+                                            setLastName(e.target.value)
+                                        }
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="university"
+                                    className="interBody block text-sm font-medium text-gray-700"
+                                >
+                                    University
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        id="university"
+                                        type="text"
+                                        required={true}
+                                        className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
+                                        value={university || ""}
+                                        onChange={(e) =>
+                                            setUniversity(e.target.value)
+                                        }
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <button
+                                    type="submit"
+                                    className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    disabled={loading}
+                                    onClick={() =>
+                                        updateProfile({
+                                            username,
+                                            firstName,
+                                            lastName,
+                                            university,
+                                            avatar_url,
+                                        })
+                                    }
+                                >
+                                    {loading ? "Loading ..." : "Update"}
+                                </button>
+                            </div>
+
+                            <div className="mb-14">
+                                <button
+                                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                    onClick={() => supabase.auth.signOut()}
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </UniversalFadeAnimation>
+            {filledInfo && (
+                <button
+                    className="fixed flex justify-center items-center gap-4 bottom-10 left-0 right-0 w-[95vw] m-auto bg-black text-white text-2xl font-medium px-10 py-4"
+                    onClick={() => handleGetStartedClick()}
                 >
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="interBody block text-sm font-medium text-gray-700"
-                        >
-                            Email
-                        </label>
-                        <div className="mt-1">
-                            <input
-                                id="email"
-                                type="text"
-                                name="email"
-                                className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm cursor-not-allowed"
-                                value={session.user.email}
-                                disabled
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label
-                            htmlFor="username"
-                            className="interBody block text-sm font-medium text-gray-700"
-                        >
-                            Username
-                        </label>
-                        <div className="mt-1">
-                            <input
-                                id="username"
-                                type="text"
-                                required={true}
-                                className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                                value={username || ""}
-                                onChange={(e) => setUsername(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label
-                            htmlFor="firstName"
-                            className="interBody block text-sm font-medium text-gray-700"
-                        >
-                            First Name
-                        </label>
-                        <div className="mt-1">
-                            <input
-                                id="firstName"
-                                type="text"
-                                required={true}
-                                className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                                value={firstName || ""}
-                                onChange={(e) => setFirstName(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label
-                            htmlFor="lastName"
-                            className="interBody block text-sm font-medium text-gray-700"
-                        >
-                            Last Name
-                        </label>
-                        <div className="mt-1">
-                            <input
-                                id="lastName"
-                                type="text"
-                                required={true}
-                                className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                                value={lastName || ""}
-                                onChange={(e) => setLastName(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label
-                            htmlFor="university"
-                            className="interBody block text-sm font-medium text-gray-700"
-                        >
-                            University
-                        </label>
-                        <div className="mt-1">
-                            <input
-                                id="university"
-                                type="text"
-                                required={true}
-                                className="interBody block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
-                                value={university || ""}
-                                onChange={(e) => setUniversity(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <button
-                            type="submit"
-                            className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            disabled={loading}
-                            onClick={() => updateProfile({
-                                username,
-                                firstName,
-                                lastName,
-                                university,
-                                avatar_url,
-                            })}
-                        >
-                            {loading ? "Loading ..." : "Update"}
-                        </button>
-                    </div>
-
-                    <div className="mb-14">
-                        <button
-                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            onClick={() => supabase.auth.signOut()}
-                        >
-                            Sign Out
-                        </button>
-                    </div>
-                </form>
-            </section>
-        </div>
+                    Get Started
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-6 h-6"
+                    >
+                        <path
+                            fillRule="evenodd"
+                            d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </button>
+            )}
+        </>
     );
 }
