@@ -18,7 +18,7 @@ export default function Account({ session }) {
 
     useEffect(() => {
         getProfile();
-    }, [session, getProfile]);
+    }, []);
 
     useEffect(() => {
         if (filledInfo === true) {
@@ -29,7 +29,7 @@ export default function Account({ session }) {
                 behavior: "smooth",
             });
         }
-    }, [filledInfo]);
+    }, []);
 
     async function getCurrentUser() {
         const {
@@ -74,7 +74,7 @@ export default function Account({ session }) {
                     data.lastName !== null &&
                     data.university !== null
                 ) {
-                    setFilledInfo(true);
+                    // setFilledInfo(true);
                 }
             }
         } catch (error) {
