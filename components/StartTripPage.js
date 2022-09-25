@@ -85,37 +85,41 @@ export default function StartTripPage() {
             const geocoder = new google.maps.Geocoder();
             geocoder
                 .geocode({ placeId: directionsResponse.geocoded_waypoints[1].place_id })
-                .then(({ results }) => {
+                .then(async ({ results }) => {
                     console.log("in here")
                     console.log(results[0].geometry.location.lat());
                     console.log(results[0].geometry.location.lng());
 
-                    setDestLocation({
-                        lat: results[0].geometry.location.lat(),
-                        lng: results[0].geometry.location.lng(),
+                    // setDestLocation({
+                    //     lat: results[0].geometry.location.lat(),
+                    //     lng: results[0].geometry.location.lng(),
+                    // });
+                    
+                    //setTimeout(() => console.log("Waiting for 5 seconds"), 5000);
+
+                    console.log('here1');
+                    const data = {
+                        user_id: user.id,
+                        origin_lon: currentLocation.lng,
+                        origin_lat: currentLocation.lat,
+                        dest_lon: results[0].geometry.location.lng(),
+                        dest_lat: results[0].geometry.location.lat(),
+                        awaiting: true,
+                    };
+
+                    console.log('here2');
+                    
+                    console.log(data);
+
+                    let { error } = await supabase.from("trip_requests").insert(data);
+                    console.log('here3');
+
+                    if (error) {
+                        throw error;
+                    }
+
                     });
-
-                });
-            console.log('here1');
-            const data = {
-                user_id: user.id,
-                origin_lon: currentLocation.lng,
-                origin_lat: currentLocation.lat,
-                dest_lon: destLocation.lng,
-                dest_lat: destLocation.lat,
-                awaiting: true,
-            };
-
-            console.log('here2');
             
-            console.log(data);
-
-            let { error } = await supabase.from("trip_requests").insert(data);
-            console.log('here3');
-
-            if (error) {
-                throw error;
-            }
         } catch (error) {
             alert(error.message);
         } finally {

@@ -89,7 +89,7 @@ export default function TripMatchingPage() {
                 .neq("user_id", user.id)
                 .eq("awaiting", true);
 
-            //console.log("data", data);
+            console.log("data", data);
             console.log("1");
             if (error) {
                 throw error;
@@ -97,12 +97,19 @@ export default function TripMatchingPage() {
             console.log("2");
 
             if (data) {
+                console.log("data2", data);
                 console.log("3");
                 var all_other_origins = [];
                 var all_other_destinations = [];
 
                 var origin_dist_diffs = [];
                 var dest_dist_diffs = [];
+
+                /*
+                for (let i = 0; i < data.length; i++) {
+                    
+                }
+                */
 
                 // find distance btwn user and extracted rows
                 for (let i = 0; i < data.length; i++) {
