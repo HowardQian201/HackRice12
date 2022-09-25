@@ -56,7 +56,7 @@ export default function Auth() {
             // If the email is not a Rice email, throw an error
             if (!email.endsWith("@rice.edu")) {
                 // throw new Error("Please use a Rice email");
-                toast.warn("Usually we'd ask for a university email only, but for Hackathon judges, you can try out the app now!")
+                toast("Usually we'd ask for a university email only, but for Hackathon judges, you can try out the app now!")
             }
             const { error } = await supabase.auth.signInWithOtp({ email });
             if (error) throw error;
