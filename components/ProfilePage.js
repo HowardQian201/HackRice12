@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
 import Avatar from "./Avatar";
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
 export default function Account({ session }) {
     const [loading, setLoading] = useState(true);
     const [username, setUsername] = useState("");
@@ -93,7 +94,7 @@ export default function Account({ session }) {
                 throw error;
             }
         } catch (error) {
-            alert(error.message);
+            toast(error.message);
         } finally {
             setLoading(false);
         }
