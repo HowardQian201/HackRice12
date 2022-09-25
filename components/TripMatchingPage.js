@@ -14,8 +14,10 @@ export default function TripMatchingPage() {
     const [map, setMap] = useState(/** google.maps.Map */ null);
     const [originDistLoading, setOriginDistLoading] = useState(true);
     const [destDistLoading, setDestDistLoading] = useState(true);
-    const [originPlaceId, setOriginPlaceId] = useState(null);
-    const [destinationPlaceId, setDestinationPlaceId] = useState(null);
+    const [tripRequest, setTripRequest] = useState(null);
+    
+    const [originCoords, setOriginCoords] = useState(true);
+    const [destCoords, setDestCoords] = useState(true);
 
     const [userTripRequestID, setUserTripRequestID] = useState(null);
 
@@ -43,8 +45,8 @@ export default function TripMatchingPage() {
             user = await getCurrentUser();
 
             let { data, error, status } = await supabase
-                .from("temp_trip_requests")
-                .select(`*`)
+                .from("trip_requests")
+                .select('*')
                 .eq("user_id", user.id)
                 .eq("awaiting", true)
                 .order("created_at", { ascending: false })
@@ -55,9 +57,12 @@ export default function TripMatchingPage() {
             }
 
             if (data && map) {
+                // setOriginCoords(data[0].origin_lat, data[0].origin_long)
+
+                // setDestCoords(data[0].dest_lat, data[0].dest_lat)
                 setUserTripRequestID(data[0].id);
-                setOriginPlaceId(data[0].origin_place_id);
-                setDestinationPlaceId(data[0].destination_place_id);
+
+                setTripRequest(data[0]);
             }
         } catch (error) {
             alert(error.message);
@@ -79,7 +84,7 @@ export default function TripMatchingPage() {
 
             // get all trip requests that are awaiting and not the current user's
             let { data, error } = await supabase
-                .from("temp_trip_requests")
+                .from("trip_requests")
                 .select("*")
                 .neq("user_id", user.id)
                 .eq("awaiting", true);
@@ -102,11 +107,9 @@ export default function TripMatchingPage() {
                 // find distance btwn user and extracted rows
                 for (let i = 0; i < data.length; i++) {
                     let other_origin = new google.maps.LatLng(data[i].origin_lat, data[i].origin_lon);
-                    
                     all_other_origins.push(other_origin);
 
                     // Aggregation of all other origins
-
                     let other_dest = new google.maps.LatLng(data[i].dest_lat, data[i].dest_lon);
                     all_other_destinations.push(other_dest);
                     
@@ -119,28 +122,28 @@ export default function TripMatchingPage() {
 
 
                 // call distance matrix api
-                // var service = new google.maps.DistanceMatrixService();
+                var service = new google.maps.DistanceMatrixService();
 
                 // getting distances btwn user's origin and all other origins
-                // var f_origin_dist_diffs = await service.getDistanceMatrix(
-                //     {
-                //         origins: [originPlaceId],
-                //         destinations: all_other_origins,
-                //         travelMode: google.maps.TravelMode.WALKING,
-                //         unitSystem: google.maps.UnitSystem.IMPERIAL,
-                //     },
-                //     origin_dist_callback
-                // );
-                // console.log("5");
-
                 service.getDistanceMatrix(
-                      {
-                          origins: [originPlaceId],
-                          destinations: all_other_origins,
-                          travelMode: google.maps.TravelMode.WALKING,
-                          unitSystem: google.maps.UnitSystem.IMPERIAL,
-                      },
-                      origin_dist_callback);
+                    {
+                        origins: [new google.maps.LatLng(tripRequest.origin_lat, tripRequest.origin_lon)],
+                        destinations: all_other_origins,
+                        travelMode: google.maps.TravelMode.WALKING,
+                        unitSystem: google.maps.UnitSystem.IMPERIAL,
+                    },
+                    origin_dist_callback
+                );
+                console.log("5");
+
+                // service.getDistanceMatrix(
+                //       {
+                //           origins: [new google.maps.LatLng(tripRequest.dest_lat, trip_request.dest_lon)],
+                //           destinations: all_other_destinations,
+                //           travelMode: google.maps.TravelMode.WALKING,
+                //           unitSystem: google.maps.UnitSystem.IMPERIAL,
+                //       },
+                //       origin_dist_callback);
 
                 function origin_dist_callback(response, status) {
                     console.log("6");
@@ -190,8 +193,12 @@ export default function TripMatchingPage() {
                 //         return dest_dist_diffs;
                 //     }
                 // }
-                // console.log("8");
+
+
+                console.log("8");
                 // console.log(f_origin_dist_diffs, f_dest_dist_diffs);
+
+                
                 // If both origin and destination match, then this is a match
                 if (userOriginToOtherOriginResult && userDestinationToOtherDestinationResult) {
                     console.log("match found:", other_request);
@@ -203,13 +210,14 @@ export default function TripMatchingPage() {
 
                     console.log(data);
 
+                    // Insert into trips database
                     let { error } = await supabase.from("trips").insert([data]);
-
+                    // Change awaiting in user trip
                     let { error2 } = await supabase
                         .from("trip_requests")
                         .update({ awaiting: false })
                         .eq("id", userTripRequestID);
-
+                    // Change awaiting in user trip
                     let { error3 } = await supabase
                         .from("trip_requests")
                         .update({ awaiting: false })

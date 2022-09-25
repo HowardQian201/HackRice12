@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../utils/supabaseClient";
-import Auth from "../components/Auth";
+import SplashScreen from "../components/SplashScreen";
 import Profile from "../components/ProfilePage";
 
 export default function Home() {
@@ -47,7 +47,7 @@ export default function Home() {
     return (
         <div className="">
             {!session ? (
-                <Auth />
+                <SplashScreen />
             ) : (
                 // <StartRidePage key={session.user.id} session={session} />
                 <Profile key={session.user.id} session={session} />

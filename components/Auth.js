@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
+import UniversalFadeAnimation from "./UniversalFadeComponent";
 
 export default function Auth() {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
-
+    const [showInput, setShowInput] = useState(false);
+    const router = useRouter();
     const handleLogin = async (email) => {
         try {
             setLoading(true);
@@ -23,8 +26,15 @@ export default function Auth() {
     };
 
     return (
-        <div className="">
-            <h2 className="">Sign in via magic link with your email below</h2>
+        <UniversalFadeAnimation>
+            <div className="flex flex-col justify-center items-center w-screen h-screen bg-white">
+                <h1 className="interHeader">Walkify</h1>
+                <img src="/images/authCityWomen.png"/> 
+
+
+                <h2 className="">
+                Sign in via magic link with your email below
+            </h2>
             <div className="">
                 <input
                     className=""
@@ -44,9 +54,7 @@ export default function Auth() {
                     {loading ? "Loading..." : "Send magic link"}
                 </button>
             </div>
-        </div>
-
-
-        
+            </div>
+        </UniversalFadeAnimation>
     );
 }

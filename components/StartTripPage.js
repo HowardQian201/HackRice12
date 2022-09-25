@@ -80,6 +80,8 @@ export default function StartTripPage() {
         try {
             const user = await getCurrentUser();
 
+            // Get destination location from Google
+            // Don't need origin because that will just be current location
             const geocoder = new google.maps.Geocoder();
             geocoder
                 .geocode({ placeId: directionsResponse.geocoded_waypoints[1].place_id })
@@ -94,7 +96,7 @@ export default function StartTripPage() {
                     });
 
                 });
-
+            console.log('here1');
             const data = {
                 user_id: user.id,
                 origin_lon: currentLocation.lng,
@@ -104,10 +106,12 @@ export default function StartTripPage() {
                 awaiting: true,
             };
 
+            console.log('here2');
             
             console.log(data);
 
-            let { error } = await supabase.from("temp_trip_requests").insert(data);
+            let { error } = await supabase.from("trip_requests").insert(data);
+            console.log('here3');
 
             if (error) {
                 throw error;
@@ -161,35 +165,8 @@ export default function StartTripPage() {
             alert(error.message);
         }
 
-        // Consider
     }
 
-    // async function getProfile() {
-    //     try {
-    //         setLoading(true);
-    //         const user = await getCurrentUser();
-
-    //         let { data, error, status } = await supabase
-    //             .from("profiles")
-    //             .select(`username, firstName, lastName, university, avatar_url`)
-    //             .eq("id", user.id)
-    //             .single();
-
-    //         // console.log("username", data.username);
-
-    //         if (error && status !== 406) {
-    //             throw error;
-    //         }
-
-    //         if (data) {
-    //             setUsername(data.username);
-    //         }
-    //     } catch (error) {
-    //         alert(error.message);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }
 
     if (!isLoaded) {
         return <div>Loading...</div>;
