@@ -306,7 +306,6 @@ export default function TripMatchingPage() {
                         <DirectionsRenderer directions={directionsResponse} />
                     )} */}
                 </GoogleMap>
-                TripMatchingPage
                 <div className="flex justify-center items-center absolute inset-0 bg-white w-[80vw] shadow-xl h-[80vh] m-auto rounded-2xl">
                     <h1 className="interHeader animate-bounce">
                         Creating match...
