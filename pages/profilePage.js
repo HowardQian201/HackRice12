@@ -25,7 +25,6 @@ export default function ProfilePage() {
             if (mounted) {
                 if (session) {
                     setSession(session);
-                    router.push("/profilePage")
                 }
 
                 setIsLoading(false);

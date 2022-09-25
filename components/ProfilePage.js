@@ -20,16 +20,16 @@ export default function Account({ session }) {
         getProfile();
     }, []);
 
-    // useEffect(() => {
-    //     if (filledInfo === true) {
-    //         // Scroll to top using window.scroll()
-    //         window.scroll({
-    //             top: 0,
-    //             left: 0,
-    //             behavior: "smooth",
-    //         });
-    //     }
-    // }, []);
+    useEffect(() => {
+        if (filledInfo === true) {
+            // Scroll to top using window.scroll()
+            window.scroll({
+                top: 0,
+                left: 0,
+                behavior: "smooth",
+            });
+        }
+    }, []);
 
     async function getCurrentUser() {
         const {
@@ -74,7 +74,7 @@ export default function Account({ session }) {
                     data.lastName !== null &&
                     data.university !== null
                 ) {
-                    // setFilledInfo(true);
+                    setFilledInfo(true);
                 }
             }
         } catch (error) {
@@ -122,8 +122,9 @@ export default function Account({ session }) {
         }
     }
 
-    let handleGetStartedClick = () => {
-        if (checkIfUserFilledInfo()) {
+    let handleGetStartedClick = async () => {
+        let userFilledInfoDatabase = await checkIfUserFilledInfo();
+        if (userFilledInfoDatabase) {
             router.push("/startTripPage");
         } else {
             toast.error("Please fill in all the information!");
