@@ -20,16 +20,16 @@ export default function Account({ session }) {
         getProfile();
     }, []);
 
-    useEffect(() => {
-        if (filledInfo === true) {
-            // Scroll to top using window.scroll()
-            window.scroll({
-                top: 0,
-                left: 0,
-                behavior: "smooth",
-            });
-        }
-    }, []);
+    // useEffect(() => {
+    //     if (filledInfo === true) {
+    //         // Scroll to top using window.scroll()
+    //         window.scroll({
+    //             top: 0,
+    //             left: 0,
+    //             behavior: "smooth",
+    //         });
+    //     }
+    // }, []);
 
     async function getCurrentUser() {
         const {
